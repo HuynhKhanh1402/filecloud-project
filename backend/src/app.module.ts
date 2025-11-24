@@ -9,7 +9,7 @@ import { MinioModule } from './minio/minio.module';
       isGlobal: true,
     }),
     PrismaModule,
-    // MinioModule,
+    MinioModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}
