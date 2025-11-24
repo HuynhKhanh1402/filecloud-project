@@ -79,6 +79,7 @@ export class AuthService {
         email: user.email,
         fullName: user.fullName,
         avatar: user.avatar,
+        usedStorage: user.usedStorage,
       },
       access_token: token,
     };
