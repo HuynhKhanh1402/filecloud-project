@@ -1,0 +1,72 @@
+import React from 'react';
+import { NavLink, Link } from 'react-router-dom';
+
+const Sidebar: React.FC = () => {
+  return (
+    <aside className="hidden md:flex flex-col w-64 h-screen bg-[#101622] border-r border-[#232f48] fixed left-0 top-0 z-50">
+      {/* Logo */}
+      <Link to="/" className="flex items-center gap-3 px-6 py-5 hover:opacity-80 transition-opacity w-fit">
+        <div className="size-10 flex items-center justify-center rounded-xl bg-primary text-white">
+          <span className="material-symbols-outlined text-[28px]">cloud</span>
+        </div>
+        <h1 className="text-white text-xl font-bold tracking-tight">FileCloud</h1>
+      </Link>
+
+      {/* Navigation */}
+      <nav className="flex flex-col gap-1 px-3 mt-4 flex-1">
+        <NavLink
+          to="/"
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-primary text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+        >
+          <span className="material-symbols-outlined text-[20px]">dashboard</span>
+          Dashboard
+        </NavLink>
+        <NavLink
+          to="/files"
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-primary text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+        >
+          <span className="material-symbols-outlined text-[20px]">folder</span>
+          My Files
+        </NavLink>
+        <NavLink
+          to="/shared"
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-primary text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+        >
+          <span className="material-symbols-outlined text-[20px]">group</span>
+          Shared with me
+        </NavLink>
+        <NavLink
+          to="/trash"
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-primary text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+        >
+          <span className="material-symbols-outlined text-[20px]">delete</span>
+          Trash
+        </NavLink>
+        <NavLink
+          to="/settings"
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-primary text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+        >
+          <span className="material-symbols-outlined text-[20px]">settings</span>
+          Settings
+        </NavLink>
+      </nav>
+
+      {/* Storage Widget */}
+      <div className="p-4 m-3 bg-[#1a2233] rounded-xl border border-[#232f48]">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-semibold text-white">Storage</span>
+          <span className="text-xs text-primary">31%</span>
+        </div>
+        <div className="w-full bg-[#232f48] rounded-full h-1.5 mb-2">
+          <div className="bg-primary h-1.5 rounded-full" style={{ width: '31%' }}></div>
+        </div>
+        <p className="text-[10px] text-gray-400">15.7 GB of 50 GB used</p>
+        <button className="w-full mt-3 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-lg transition-colors">
+          Upgrade
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+export default Sidebar;

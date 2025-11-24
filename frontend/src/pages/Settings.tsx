@@ -1,0 +1,104 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import MainLayout from '../layouts/MainLayout';
+import AvatarPlaceholder from '../components/AvatarPlaceholder';
+
+const Settings: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <MainLayout>
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-gray-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Settings</h1>
+          <p className="text-gray-500 dark:text-[#92a4c9] text-base font-normal leading-normal">Manage your account and preferences</p>
+        </div>
+
+        <div className="grid gap-6">
+          {/* Profile Section */}
+          <div className="bg-[#1a2233] rounded-xl border border-[#232f48] p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Profile</h3>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <AvatarPlaceholder size="md" />
+                <div className="flex-1">
+                  <p className="text-white font-semibold">John Doe</p>
+                  <p className="text-gray-400 text-sm">john.doe@example.com</p>
+                </div>
+                <button
+                  onClick={() => navigate('/profile/edit')}
+                  className="px-4 py-2 bg-[#232f48] hover:bg-[#2d3a54] text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Edit Profile
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Storage Section */}
+          <div className="bg-[#1a2233] rounded-xl border border-[#232f48] p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Storage</h3>
+            <div className="flex flex-col gap-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-400">Storage Used</span>
+                  <span className="text-sm font-semibold text-white">15.7 GB / 50 GB</span>
+                </div>
+                <div className="w-full bg-[#232f48] rounded-full h-2">
+                  <div className="bg-primary h-2 rounded-full" style={{ width: '31%' }}></div>
+                </div>
+              </div>
+              <button className="w-fit px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors">
+                Upgrade Storage
+              </button>
+            </div>
+          </div>
+
+          {/* Preferences Section */}
+          <div className="bg-[#1a2233] rounded-xl border border-[#232f48] p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Preferences</h3>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white font-medium">Email Notifications</p>
+                  <p className="text-sm text-gray-400">Receive email updates about your files</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" defaultChecked />
+                  <div className="w-11 h-6 bg-[#232f48] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white font-medium">Dark Mode</p>
+                  <p className="text-sm text-gray-400">Use dark theme</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" defaultChecked />
+                  <div className="w-11 h-6 bg-[#232f48] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Security Section */}
+          <div className="bg-[#1a2233] rounded-xl border border-[#232f48] p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Security</h3>
+            <div className="flex flex-col gap-3">
+              <button className="flex items-center justify-between p-3 bg-[#232f48] hover:bg-[#2d3a54] rounded-lg transition-colors">
+                <span className="text-white text-sm font-medium">Change Password</span>
+                <span className="material-symbols-outlined text-gray-400">chevron_right</span>
+              </button>
+              <button className="flex items-center justify-between p-3 bg-[#232f48] hover:bg-[#2d3a54] rounded-lg transition-colors">
+                <span className="text-white text-sm font-medium">Two-Factor Authentication</span>
+                <span className="material-symbols-outlined text-gray-400">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </MainLayout>
+  );
+};
+
+export default Settings;
