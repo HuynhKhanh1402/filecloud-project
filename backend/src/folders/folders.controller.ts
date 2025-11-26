@@ -10,6 +10,13 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { FoldersService } from './folders.service';
 import {
   FolderResponseDto,
@@ -19,12 +26,17 @@ import {
 } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('folders')
+@ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('folders')
 export class FoldersController {
   constructor(private readonly foldersService: FoldersService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new folder' })
+  @ApiResponse({ status: 201, type: FolderResponseDto })
+  @ApiResponse({ status: 409, description: 'Folder name already exists' })
   async create(
     @Request() req,
     @Body() createFolderDto: CreateFolderDto,
@@ -33,6 +45,9 @@ export class FoldersController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all folders' })
+  @ApiQuery({ name: 'parentId', required: false })
+  @ApiResponse({ status: 200, type: [FolderResponseDto] })
   async findAll(
     @Request() req,
     @Query('parentId') parentId?: string,
@@ -41,6 +56,9 @@ export class FoldersController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get folder by ID' })
+  @ApiResponse({ status: 200, type: FolderResponseDto })
+  @ApiResponse({ status: 404, description: 'Folder not found' })
   async findOne(
     @Request() req,
     @Param('id') id: string,
@@ -49,16 +67,22 @@ export class FoldersController {
   }
 
   @Get(':id/contents')
+  @ApiOperation({ summary: 'Get folder with its contents' })
+  @ApiResponse({ status: 200 })
   async getFolderWithContents(@Request() req, @Param('id') id: string) {
     return this.foldersService.getFolderWithContents(req.user.id, id);
   }
 
   @Get(':id/breadcrumb')
+  @ApiOperation({ summary: 'Get folder breadcrumb path' })
+  @ApiResponse({ status: 200, type: [FolderResponseDto] })
   async getBreadcrumb(@Request() req, @Param('id') id: string) {
     return this.foldersService.getBreadcrumb(req.user.id, id);
   }
 
   @Patch(':id/rename')
+  @ApiOperation({ summary: 'Rename folder' })
+  @ApiResponse({ status: 200, type: FolderResponseDto })
   async rename(
     @Request() req,
     @Param('id') id: string,
@@ -68,6 +92,8 @@ export class FoldersController {
   }
 
   @Patch(':id/move')
+  @ApiOperation({ summary: 'Move folder to another parent' })
+  @ApiResponse({ status: 200, type: FolderResponseDto })
   async move(
     @Request() req,
     @Param('id') id: string,
@@ -77,6 +103,9 @@ export class FoldersController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete folder' })
+  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 400, description: 'Folder is not empty' })
   async delete(
     @Request() req,
     @Param('id') id: string,
