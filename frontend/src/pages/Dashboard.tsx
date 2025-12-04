@@ -1,10 +1,47 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import FileTable from '../components/FileTable';
 import ViewToggle from '../components/ViewToggle';
+import { dashboardService } from '../services/dashboard.service';
+import type { UserStats, FileItem } from '../services/dashboard.service';
 
 const Dashboard: React.FC = () => {
-  const [viewMode, setViewMode] = React.useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [recentFiles, setRecentFiles] = useState<FileItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [statsData, filesData] = await Promise.all([
+          dashboardService.getStats(),
+          dashboardService.getRecentFiles()
+        ]);
+        setStats(statsData);
+        setRecentFiles(filesData);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const formatSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const calculatePercentage = (used: number, total: number) => {
+    if (total === 0) return 0;
+    return Math.min(100, (used / total) * 100);
+  };
 
   return (
     <MainLayout>
@@ -29,22 +66,28 @@ const Dashboard: React.FC = () => {
             {/* Storage Card */}
             <div className="p-6 bg-[#1a2233] rounded-xl border border-[#232f48]">
               <p className="text-gray-400 text-sm mb-1">Storage Used</p>
-              <p className="text-2xl font-bold text-white mb-4">15.7 GB <span className="text-gray-500 text-lg font-normal">/ 50 GB</span></p>
+              <p className="text-2xl font-bold text-white mb-4">
+                {stats ? formatSize(stats.usedStorage) : '...'}
+                <span className="text-gray-500 text-lg font-normal"> / {stats ? formatSize(stats.maxStorage) : '...'}</span>
+              </p>
               <div className="w-full bg-[#232f48] rounded-full h-2">
-                <div className="bg-primary h-2 rounded-full" style={{ width: '31%' }}></div>
+                <div
+                  className="bg-primary h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${stats ? calculatePercentage(stats.usedStorage, stats.maxStorage) : 0}%` }}
+                ></div>
               </div>
             </div>
 
             {/* Total Files Card */}
             <div className="p-6 bg-[#1a2233] rounded-xl border border-[#232f48]">
               <p className="text-gray-400 text-sm mb-1">Total Files</p>
-              <p className="text-2xl font-bold text-white">1,234</p>
+              <p className="text-2xl font-bold text-white">{stats ? stats.totalFiles : '...'}</p>
             </div>
 
             {/* Total Folders Card */}
             <div className="p-6 bg-[#1a2233] rounded-xl border border-[#232f48]">
               <p className="text-gray-400 text-sm mb-1">Total Folders</p>
-              <p className="text-2xl font-bold text-white">56</p>
+              <p className="text-2xl font-bold text-white">{stats ? stats.totalFolders : '...'}</p>
             </div>
           </div>
         </div>
@@ -56,7 +99,13 @@ const Dashboard: React.FC = () => {
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           </div>
           <div className="bg-[#1a2233] rounded-xl border border-[#232f48] overflow-hidden">
-            <FileTable viewMode={viewMode} />
+            {loading ? (
+              <div className="p-8 text-center text-gray-400">Loading files...</div>
+            ) : recentFiles.length > 0 ? (
+              <FileTable viewMode={viewMode} files={recentFiles} />
+            ) : (
+              <div className="p-8 text-center text-gray-400">No recent files found.</div>
+            )}
           </div>
         </div>
       </div>

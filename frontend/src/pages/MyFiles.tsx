@@ -22,7 +22,7 @@ const MyFiles: React.FC = () => {
         </div>
 
         <FilterBar viewToggle={<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />} />
-        <FileTable viewMode={viewMode} />
+        <FileTable viewMode={viewMode} files={[]} />
       </div>
     </MainLayout>
   );

@@ -10,7 +10,7 @@ const Shared: React.FC = () => {
           <p className="text-gray-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Shared with me</p>
           <p className="text-gray-500 dark:text-[#92a4c9] text-base font-normal leading-normal">Files shared with you</p>
         </div>
-        <FileTable viewMode="list" />
+        <FileTable viewMode="list" files={[]} />
       </div>
     </MainLayout>
   );
