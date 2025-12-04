@@ -13,7 +13,7 @@ export class FilesService {
   constructor(
     private prisma: PrismaService,
     private minioService: MinioService,
-  ) {}
+  ) { }
 
   async uploadFile(
     userId: string,
@@ -64,13 +64,13 @@ export class FilesService {
   async findAll(
     userId: string,
     folderId?: string,
-    includeDeleted = false,
+    isDeleted = false,
   ): Promise<FileResponseDto[]> {
     return this.prisma.file.findMany({
       where: {
         userId,
         folderId: folderId || null,
-        isDeleted: includeDeleted ? undefined : false,
+        isDeleted: isDeleted,
       },
       orderBy: { createdAt: 'desc' },
     });
