@@ -7,17 +7,20 @@ import Settings from './pages/Settings';
 import EditProfile from './pages/EditProfile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/files" element={<MyFiles />} />
-        <Route path="/shared" element={<Shared />} />
-        <Route path="/trash" element={<Trash />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/profile/edit" element={<EditProfile />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/files" element={<MyFiles />} />
+          <Route path="/shared" element={<Shared />} />
+          <Route path="/trash" element={<Trash />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile/edit" element={<EditProfile />} />
+        </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,20 +1,50 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
+import { authService } from '../services/auth.service';
 
 const Login: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await authService.login({ email, password });
+      navigate('/');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthLayout
       title="Login"
       subtitle="Welcome back! Please enter your details."
     >
-      <form className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        {error && (
+          <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl">
+            {error}
+          </div>
+        )}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-gray-300">Email / Username</label>
           <input
             type="text"
             className="w-full p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="Enter your email or username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -24,6 +54,9 @@ const Login: React.FC = () => {
               type="password"
               className="w-full p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
             <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
               <span className="material-symbols-outlined text-[20px]">visibility_off</span>
@@ -39,27 +72,16 @@ const Login: React.FC = () => {
           <a href="#" className="text-sm font-medium text-primary hover:text-primary/80">Forgot password?</a>
         </div>
 
-        <button className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-colors mt-2">
-          Login
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-colors mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
 
-      <div className="relative flex items-center gap-4 my-2">
-        <div className="h-px bg-[#232f48] flex-1"></div>
-        <span className="text-sm text-gray-500">or</span>
-        <div className="h-px bg-[#232f48] flex-1"></div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <button className="flex items-center justify-center gap-2 p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white hover:bg-[#232f48] transition-colors">
-          <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="size-5" alt="Google" />
-          <span className="text-sm font-medium">Google</span>
-        </button>
-        <button className="flex items-center justify-center gap-2 p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white hover:bg-[#232f48] transition-colors">
-          <img src="https://www.svgrepo.com/show/452263/microsoft.svg" className="size-5" alt="Microsoft" />
-          <span className="text-sm font-medium">Microsoft</span>
-        </button>
-      </div>
 
       <p className="text-center text-sm text-gray-400 mt-4">
         Don't have an account? <Link to="/register" className="text-primary font-medium hover:underline">Register now</Link>
@@ -69,3 +91,4 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+

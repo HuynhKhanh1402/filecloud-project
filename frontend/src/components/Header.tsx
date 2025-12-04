@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AvatarPlaceholder from './AvatarPlaceholder';
+import { authService } from '../services/auth.service';
 
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
@@ -20,7 +21,7 @@ const Header: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    // Add logout logic here
+    authService.logout();
     navigate('/login');
   };
 
