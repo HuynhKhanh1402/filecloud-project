@@ -14,7 +14,7 @@ export interface FileTableProps {
 
 const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTrash = false }) => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 
   // Modal States
@@ -45,11 +45,30 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
       setMenuPosition(null);
     } else {
       const rect = e.currentTarget.getBoundingClientRect();
+      const menuWidth = 192; // w-48 = 12rem = 192px
+      const menuHeight = isTrash ? 150 : 280; // estimated heights
+
+      // Calculate position to keep menu within viewport
+      let top = rect.bottom + 2;
+      let left = rect.right - menuWidth; // Align right edge of menu with right edge of button
+
+      // Check if menu goes below viewport
+      if (top + menuHeight > window.innerHeight) {
+        top = rect.top - menuHeight - 2;
+      }
+
+      // Check if menu goes beyond left edge
+      if (left < 8) {
+        left = 8;
+      }
+
+      // Check if menu goes beyond right edge
+      if (left + menuWidth > window.innerWidth - 8) {
+        left = window.innerWidth - menuWidth - 8;
+      }
+
       setActiveMenuId(id);
-      setMenuPosition({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right
-      });
+      setMenuPosition({ top, left });
     }
   };
 
@@ -136,7 +155,7 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
         className="fixed w-48 bg-[#1a2233] border border-[#232f48] rounded-xl shadow-lg z-[9999] overflow-hidden"
         style={{
           top: `${menuPosition.top}px`,
-          right: `${menuPosition.right}px`
+          left: `${menuPosition.left}px`
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -217,6 +236,8 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
     };
   }, [activeMenuId]);
 
+  const activeFile = files.find(f => f.id === activeMenuId);
+
   return (
     <>
       {viewMode === 'grid' ? (
@@ -245,7 +266,6 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
                   >
                     <span className="material-symbols-outlined text-lg">more_vert</span>
                   </button>
-                  {activeMenuId === file.id && renderMenu(file)}
                 </div>
               </div>
             ))}
@@ -288,7 +308,6 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
                       >
                         <span className="material-symbols-outlined text-lg">more_horiz</span>
                       </button>
-                      {activeMenuId === file.id && renderMenu(file)}
                     </td>
                   </tr>
                 ))}
@@ -297,6 +316,9 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
           </div>
         </div>
       )}
+
+      {/* Render menu outside the loop */}
+      {activeFile && renderMenu(activeFile)}
 
       {/* Rename Modal */}
       <Modal

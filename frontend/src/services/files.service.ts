@@ -1,7 +1,28 @@
 import api from './auth.service';
 import type { FileItem } from './dashboard.service';
 
+export interface FolderItem {
+  id: string;
+  name: string;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FolderContents {
+  folder: FolderItem;
+  subfolders: FolderItem[];
+  files: FileItem[];
+}
+
 export const filesService = {
+  // File operations
+  async getFiles(folderId?: string): Promise<FileItem[]> {
+    const url = folderId ? `/files?folderId=${folderId}` : '/files';
+    const response = await api.get(url);
+    return response.data;
+  },
+
   async downloadFile(id: string, name: string) {
     const response = await api.get(`/files/${id}/download`, {
       responseType: 'blob',
@@ -58,6 +79,42 @@ export const filesService = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  },
+
+  // Folder operations
+  async getFolders(parentId?: string): Promise<FolderItem[]> {
+    const url = parentId ? `/folders?parentId=${parentId}` : '/folders';
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  async createFolder(name: string, parentId?: string): Promise<FolderItem> {
+    const response = await api.post('/folders', { name, parentId });
+    return response.data;
+  },
+
+  async getFolderContents(folderId: string): Promise<FolderContents> {
+    const response = await api.get(`/folders/${folderId}/contents`);
+    return response.data;
+  },
+
+  async getBreadcrumb(folderId: string): Promise<FolderItem[]> {
+    const response = await api.get(`/folders/${folderId}/breadcrumb`);
+    return response.data;
+  },
+
+  async renameFolder(id: string, newName: string): Promise<FolderItem> {
+    const response = await api.patch(`/folders/${id}/rename`, { name: newName });
+    return response.data;
+  },
+
+  async deleteFolder(id: string) {
+    await api.delete(`/folders/${id}`);
+  },
+
+  async moveFolder(id: string, parentId: string | null): Promise<FolderItem> {
+    const response = await api.patch(`/folders/${id}/move`, { parentId });
     return response.data;
   }
 };
