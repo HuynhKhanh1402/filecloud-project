@@ -1,5 +1,5 @@
 import api from './auth.service';
-import { FileItem } from './dashboard.service';
+import type { FileItem } from './dashboard.service';
 
 export const filesService = {
   async downloadFile(id: string, name: string) {

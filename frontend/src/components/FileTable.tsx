@@ -1,15 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { filesService } from '../services/files.service';
-
-export interface FileItem {
-  id: string;
-  name: string;
-  size: number;
-  mimeType: string;
-  createdAt: string;
-  updatedAt: string;
-  isFolder: boolean;
-}
+import type { FileItem } from '../services/dashboard.service';
 
 export interface FileTableProps {
   viewMode: 'list' | 'grid';
