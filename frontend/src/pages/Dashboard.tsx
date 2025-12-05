@@ -4,6 +4,8 @@ import FileTable from '../components/FileTable';
 import ViewToggle from '../components/ViewToggle';
 import { dashboardService } from '../services/dashboard.service';
 import type { UserStats, FileItem } from '../services/dashboard.service';
+import { formatSize } from '../utils/format';
+import { calculatePercentage } from '../utils/math';
 
 const Dashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -29,19 +31,6 @@ const Dashboard: React.FC = () => {
 
     fetchData();
   }, []);
-
-  const formatSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
-  const calculatePercentage = (used: number, total: number) => {
-    if (total === 0) return 0;
-    return Math.min(100, (used / total) * 100);
-  };
 
   return (
     <MainLayout>

@@ -2,41 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { filesService } from '../services/files.service';
 import type { FileItem } from '../services/dashboard.service';
 import Modal from './Modal';
+import { formatSize, formatDate } from '../utils/format';
+import FileIcon from './FileIcon';
 
 export interface FileTableProps {
   viewMode: 'list' | 'grid';
   files: FileItem[];
   onRefresh?: () => void;
 }
-
-const formatSize = (bytes: number) => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-GB');
-};
-
-const getIcon = (mimeType: string) => {
-  if (mimeType.includes('pdf')) {
-    return <div className="flex items-center justify-center size-10 rounded-lg bg-primary/10 text-primary"><span className="material-symbols-outlined">description</span></div>;
-  } else if (mimeType.includes('image')) {
-    return <div className="flex items-center justify-center size-10 rounded-lg bg-green-500/10 text-green-500"><span className="material-symbols-outlined">image</span></div>;
-  } else if (mimeType.includes('video')) {
-    return <div className="flex items-center justify-center size-10 rounded-lg bg-orange-500/10 text-orange-500"><span className="material-symbols-outlined">videocam</span></div>;
-  } else if (mimeType.includes('zip') || mimeType.includes('compressed')) {
-    return <div className="flex items-center justify-center size-10 rounded-lg bg-purple-500/10 text-purple-500"><span className="material-symbols-outlined">archive</span></div>;
-  } else if (mimeType.includes('folder')) {
-    return <div className="flex items-center justify-center size-10 rounded-lg bg-yellow-500/10 text-yellow-500"><span className="material-symbols-outlined">folder</span></div>;
-  } else if (mimeType.includes('text')) {
-    return <div className="flex items-center justify-center size-10 rounded-lg bg-blue-500/10 text-blue-500"><span className="material-symbols-outlined">article</span></div>;
-  }
-  return <div className="flex items-center justify-center size-10 rounded-lg bg-gray-500/10 text-gray-500"><span className="material-symbols-outlined">insert_drive_file</span></div>;
-};
 
 const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -220,7 +193,7 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
                   : 'bg-white dark:bg-[#1a2233] border-gray-200 dark:border-[#232f48] hover:border-primary/50 dark:hover:border-primary/50'
                   }`}
               >
-                {getIcon(file.mimeType)}
+                <FileIcon mimeType={file.mimeType} />
                 <div className="w-full">
                   <p className={`text-sm font-semibold truncate ${selectedFiles.has(file.id) ? 'text-primary dark:text-white' : 'text-gray-900 dark:text-white'}`}>
                     {file.name}
@@ -261,7 +234,7 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
                   >
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        {getIcon(file.mimeType)}
+                        <FileIcon mimeType={file.mimeType} />
                         <div>
                           <p className={`text-sm font-semibold ${selectedFiles.has(file.id) ? 'text-primary dark:text-white' : 'text-gray-900 dark:text-white'}`}>{file.name}</p>
                           <p className="text-xs text-gray-500 dark:text-[#92a4c9] md:hidden">{formatDate(file.createdAt)}</p>
