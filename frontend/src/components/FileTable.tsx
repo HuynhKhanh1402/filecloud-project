@@ -9,9 +9,10 @@ export interface FileTableProps {
   viewMode: 'list' | 'grid';
   files: FileItem[];
   onRefresh?: () => void;
+  isTrash?: boolean;
 }
 
-const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => {
+const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTrash = false }) => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
@@ -101,13 +102,28 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
 
     setIsProcessing(true);
     try {
-      await filesService.moveToTrash(selectedFileForAction.id);
+      if (isTrash) {
+        await filesService.deleteFilePermanently(selectedFileForAction.id);
+      } else {
+        await filesService.moveToTrash(selectedFileForAction.id);
+      }
       if (onRefresh) onRefresh();
       setDeleteModalOpen(false);
     } catch (error) {
       console.error('Delete failed:', error);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleRestore = async (file: FileItem) => {
+    try {
+      await filesService.restoreFile(file.id);
+      if (onRefresh) onRefresh();
+      setActiveMenuId(null);
+      setMenuPosition(null);
+    } catch (error) {
+      console.error('Restore failed:', error);
     }
   };
 
@@ -125,36 +141,58 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="py-1">
-          <button
-            onClick={() => handleDownload(file)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px]">download</span>
-            Download
-          </button>
-          <button
-            onClick={() => openRenameModal(file)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px]">edit</span>
-            Rename
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors">
-            <span className="material-symbols-outlined text-[20px]">drive_file_move</span>
-            Move
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors">
-            <span className="material-symbols-outlined text-[20px]">share</span>
-            Share
-          </button>
-          <div className="border-t border-[#232f48] my-1"></div>
-          <button
-            onClick={() => openDeleteModal(file)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#232f48] hover:text-red-300 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px]">delete</span>
-            Delete
-          </button>
+          {isTrash ? (
+            <>
+              <button
+                onClick={() => handleRestore(file)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">restore_from_trash</span>
+                Restore
+              </button>
+              <div className="border-t border-[#232f48] my-1"></div>
+              <button
+                onClick={() => openDeleteModal(file)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#232f48] hover:text-red-300 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">delete_forever</span>
+                Delete Permanently
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => handleDownload(file)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">download</span>
+                Download
+              </button>
+              <button
+                onClick={() => openRenameModal(file)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">edit</span>
+                Rename
+              </button>
+              <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors">
+                <span className="material-symbols-outlined text-[20px]">drive_file_move</span>
+                Move
+              </button>
+              <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors">
+                <span className="material-symbols-outlined text-[20px]">share</span>
+                Share
+              </button>
+              <div className="border-t border-[#232f48] my-1"></div>
+              <button
+                onClick={() => openDeleteModal(file)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#232f48] hover:text-red-300 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">delete</span>
+                Delete
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -298,10 +336,11 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
       </Modal>
 
       {/* Delete Modal */}
+      {/* Delete Modal */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Move to Trash"
+        title={isTrash ? "Delete Permanently" : "Move to Trash"}
         footer={
           <>
             <button
@@ -321,11 +360,16 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
         }
       >
         <p className="text-gray-300">
-          Are you sure you want to move <span className="font-semibold text-white">"{selectedFileForAction?.name}"</span> to trash?
+          {isTrash
+            ? <>Are you sure you want to <span className="font-bold text-red-500">permanently delete</span> <span className="font-semibold text-white">"{selectedFileForAction?.name}"</span>? This action cannot be undone.</>
+            : <>Are you sure you want to move <span className="font-semibold text-white">"{selectedFileForAction?.name}"</span> to trash?</>
+          }
         </p>
-        <p className="text-sm text-gray-500 mt-2">
-          You can restore it later from the Trash folder.
-        </p>
+        {!isTrash && (
+          <p className="text-sm text-gray-500 mt-2">
+            You can restore it later from the Trash folder.
+          </p>
+        )}
       </Modal>
     </>
   );

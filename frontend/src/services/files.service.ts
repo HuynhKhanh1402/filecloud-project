@@ -23,8 +23,18 @@ export const filesService = {
     return response.data;
   },
 
-  async deleteFile(id: string) {
+  async deleteFilePermanently(id: string) {
     await api.delete(`/files/${id}/permanent`);
+  },
+
+  async getTrash(): Promise<FileItem[]> {
+    const response = await api.get('/files/trash');
+    return response.data;
+  },
+
+  async restoreFile(id: string): Promise<FileItem> {
+    const response = await api.post(`/files/${id}/restore`);
+    return response.data;
   },
 
   async moveFile(id: string, folderId: string | null): Promise<FileItem> {
