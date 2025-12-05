@@ -24,7 +24,7 @@ export const filesService = {
   },
 
   async deleteFile(id: string) {
-    await api.delete(`/files/${id}`);
+    await api.delete(`/files/${id}/permanent`);
   },
 
   async moveFile(id: string, folderId: string | null): Promise<FileItem> {

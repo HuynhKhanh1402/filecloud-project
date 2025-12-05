@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { filesService } from '../services/files.service';
 import type { FileItem } from '../services/dashboard.service';
+import Modal from './Modal';
 
 export interface FileTableProps {
   viewMode: 'list' | 'grid';
@@ -41,6 +42,14 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+
+  // Modal States
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedFileForAction, setSelectedFileForAction] = useState<FileItem | null>(null);
+  const [newName, setNewName] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleSelection = (id: string) => {
@@ -77,36 +86,55 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
       setMenuPosition(null);
     } catch (error) {
       console.error('Download failed:', error);
-      alert('Failed to download file');
+      // Ideally use a toast here
     }
   };
 
-  const handleRename = async (file: FileItem) => {
-    const newName = window.prompt('Enter new name:', file.name);
-    if (newName && newName !== file.name) {
-      try {
-        await filesService.renameFile(file.id, newName);
-        setActiveMenuId(null);
-        setMenuPosition(null);
-        if (onRefresh) onRefresh();
-      } catch (error) {
-        console.error('Rename failed:', error);
-        alert('Failed to rename file');
-      }
+  const openRenameModal = (file: FileItem) => {
+    setSelectedFileForAction(file);
+    setNewName(file.name);
+    setRenameModalOpen(true);
+    setActiveMenuId(null);
+    setMenuPosition(null);
+  };
+
+  const handleRenameSubmit = async () => {
+    if (!selectedFileForAction || !newName || newName === selectedFileForAction.name) {
+      setRenameModalOpen(false);
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await filesService.renameFile(selectedFileForAction.id, newName);
+      if (onRefresh) onRefresh();
+      setRenameModalOpen(false);
+    } catch (error) {
+      console.error('Rename failed:', error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleDelete = async (file: FileItem) => {
-    if (window.confirm(`Are you sure you want to delete "${file.name}"?`)) {
-      try {
-        await filesService.moveToTrash(file.id);
-        setActiveMenuId(null);
-        setMenuPosition(null);
-        if (onRefresh) onRefresh();
-      } catch (error) {
-        console.error('Delete failed:', error);
-        alert('Failed to delete file');
-      }
+  const openDeleteModal = (file: FileItem) => {
+    setSelectedFileForAction(file);
+    setDeleteModalOpen(true);
+    setActiveMenuId(null);
+    setMenuPosition(null);
+  };
+
+  const handleDeleteSubmit = async () => {
+    if (!selectedFileForAction) return;
+
+    setIsProcessing(true);
+    try {
+      await filesService.moveToTrash(selectedFileForAction.id);
+      if (onRefresh) onRefresh();
+      setDeleteModalOpen(false);
+    } catch (error) {
+      console.error('Delete failed:', error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -132,7 +160,7 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
             Download
           </button>
           <button
-            onClick={() => handleRename(file)}
+            onClick={() => openRenameModal(file)}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">edit</span>
@@ -148,7 +176,7 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
           </button>
           <div className="border-t border-[#232f48] my-1"></div>
           <button
-            onClick={() => handleDelete(file)}
+            onClick={() => openDeleteModal(file)}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#232f48] hover:text-red-300 transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">delete</span>
@@ -178,87 +206,155 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => 
     };
   }, [activeMenuId]);
 
-  if (viewMode === 'grid') {
-    return (
-      <div className="mt-4 px-4 py-3">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {files.map((file) => (
-            <div
-              key={file.id}
-              onClick={() => toggleSelection(file.id)}
-              className={`group relative p-4 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col items-center gap-3 text-center ${selectedFiles.has(file.id)
-                ? 'bg-primary/10 border-primary/50 dark:bg-primary/20'
-                : 'bg-white dark:bg-[#1a2233] border-gray-200 dark:border-[#232f48] hover:border-primary/50 dark:hover:border-primary/50'
-                }`}
-            >
-              {getIcon(file.mimeType)}
-              <div className="w-full">
-                <p className={`text-sm font-semibold truncate ${selectedFiles.has(file.id) ? 'text-primary dark:text-white' : 'text-gray-900 dark:text-white'}`}>
-                  {file.name}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-[#92a4c9] mt-1">{formatSize(file.size)} • {formatDate(file.createdAt)}</p>
-              </div>
-              <div className="absolute top-2 right-2">
-                <button
-                  onClick={(e) => handleMenuClick(e, file.id)}
-                  className={`p-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#2d3a54] text-gray-400 transition-opacity ${activeMenuId === file.id ? 'opacity-100 bg-gray-100 dark:bg-[#2d3a54]' : 'opacity-0 group-hover:opacity-100'}`}
-                >
-                  <span className="material-symbols-outlined text-lg">more_vert</span>
-                </button>
-                {activeMenuId === file.id && renderMenu(file)}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="mt-4 px-4 py-3">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead className="border-b border-gray-200 dark:border-[#232f48]">
-            <tr>
-              <th className="p-3 text-xs font-semibold uppercase text-gray-500 dark:text-[#92a4c9]">Name</th>
-              <th className="p-3 text-xs font-semibold uppercase text-gray-500 dark:text-[#92a4c9] hidden md:table-cell">Date Uploaded</th>
-              <th className="p-3 text-xs font-semibold uppercase text-gray-500 dark:text-[#92a4c9] hidden sm:table-cell">Size</th>
-              <th className="p-3 text-xs font-semibold uppercase text-gray-500 dark:text-[#92a4c9]"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-[#232f48]">
+    <>
+      {viewMode === 'grid' ? (
+        <div className="mt-4 px-4 py-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {files.map((file) => (
-              <tr
+              <div
                 key={file.id}
                 onClick={() => toggleSelection(file.id)}
-                className={`cursor-pointer transition-colors duration-200 ${selectedFiles.has(file.id) ? 'bg-primary/10 dark:bg-primary/20' : 'hover:bg-gray-50 dark:hover:bg-[#1a2233]'}`}
+                className={`group relative p-4 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col items-center gap-3 text-center ${selectedFiles.has(file.id)
+                  ? 'bg-primary/10 border-primary/50 dark:bg-primary/20'
+                  : 'bg-white dark:bg-[#1a2233] border-gray-200 dark:border-[#232f48] hover:border-primary/50 dark:hover:border-primary/50'
+                  }`}
               >
-                <td className="p-3">
-                  <div className="flex items-center gap-3">
-                    {getIcon(file.mimeType)}
-                    <div>
-                      <p className={`text-sm font-semibold ${selectedFiles.has(file.id) ? 'text-primary dark:text-white' : 'text-gray-900 dark:text-white'}`}>{file.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-[#92a4c9] md:hidden">{formatDate(file.createdAt)}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden md:table-cell">{formatDate(file.createdAt)}</td>
-                <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden sm:table-cell">{formatSize(file.size)}</td>
-                <td className="p-3 text-right relative">
+                {getIcon(file.mimeType)}
+                <div className="w-full">
+                  <p className={`text-sm font-semibold truncate ${selectedFiles.has(file.id) ? 'text-primary dark:text-white' : 'text-gray-900 dark:text-white'}`}>
+                    {file.name}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-[#92a4c9] mt-1">{formatSize(file.size)} • {formatDate(file.createdAt)}</p>
+                </div>
+                <div className="absolute top-2 right-2">
                   <button
                     onClick={(e) => handleMenuClick(e, file.id)}
-                    className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#2d3a54] text-gray-500 dark:text-[#92a4c9] transition-colors ${activeMenuId === file.id ? 'bg-gray-200 dark:bg-[#2d3a54]' : ''}`}
+                    className={`p-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#2d3a54] text-gray-400 transition-opacity ${activeMenuId === file.id ? 'opacity-100 bg-gray-100 dark:bg-[#2d3a54]' : 'opacity-0 group-hover:opacity-100'}`}
                   >
-                    <span className="material-symbols-outlined text-lg">more_horiz</span>
+                    <span className="material-symbols-outlined text-lg">more_vert</span>
                   </button>
                   {activeMenuId === file.id && renderMenu(file)}
-                </td>
-              </tr>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 px-4 py-3">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="border-b border-gray-200 dark:border-[#232f48]">
+                <tr>
+                  <th className="p-3 text-xs font-semibold uppercase text-gray-500 dark:text-[#92a4c9]">Name</th>
+                  <th className="p-3 text-xs font-semibold uppercase text-gray-500 dark:text-[#92a4c9] hidden md:table-cell">Date Uploaded</th>
+                  <th className="p-3 text-xs font-semibold uppercase text-gray-500 dark:text-[#92a4c9] hidden sm:table-cell">Size</th>
+                  <th className="p-3 text-xs font-semibold uppercase text-gray-500 dark:text-[#92a4c9]"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-[#232f48]">
+                {files.map((file) => (
+                  <tr
+                    key={file.id}
+                    onClick={() => toggleSelection(file.id)}
+                    className={`cursor-pointer transition-colors duration-200 ${selectedFiles.has(file.id) ? 'bg-primary/10 dark:bg-primary/20' : 'hover:bg-gray-50 dark:hover:bg-[#1a2233]'}`}
+                  >
+                    <td className="p-3">
+                      <div className="flex items-center gap-3">
+                        {getIcon(file.mimeType)}
+                        <div>
+                          <p className={`text-sm font-semibold ${selectedFiles.has(file.id) ? 'text-primary dark:text-white' : 'text-gray-900 dark:text-white'}`}>{file.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-[#92a4c9] md:hidden">{formatDate(file.createdAt)}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden md:table-cell">{formatDate(file.createdAt)}</td>
+                    <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden sm:table-cell">{formatSize(file.size)}</td>
+                    <td className="p-3 text-right relative">
+                      <button
+                        onClick={(e) => handleMenuClick(e, file.id)}
+                        className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#2d3a54] text-gray-500 dark:text-[#92a4c9] transition-colors ${activeMenuId === file.id ? 'bg-gray-200 dark:bg-[#2d3a54]' : ''}`}
+                      >
+                        <span className="material-symbols-outlined text-lg">more_horiz</span>
+                      </button>
+                      {activeMenuId === file.id && renderMenu(file)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Rename Modal */}
+      <Modal
+        isOpen={renameModalOpen}
+        onClose={() => setRenameModalOpen(false)}
+        title="Rename File"
+        footer={
+          <>
+            <button
+              onClick={() => setRenameModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleRenameSubmit}
+              disabled={isProcessing || !newName.trim()}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? 'Renaming...' : 'Rename'}
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <label className="text-sm text-gray-400">Enter new name</label>
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            className="w-full px-4 py-2 bg-[#0f172a] border border-[#232f48] rounded-lg text-white focus:outline-none focus:border-primary transition-colors"
+            placeholder="File name"
+            autoFocus
+            onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit()}
+          />
+        </div>
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Move to Trash"
+        footer={
+          <>
+            <button
+              onClick={() => setDeleteModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteSubmit}
+              disabled={isProcessing}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? 'Deleting...' : 'Delete'}
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-300">
+          Are you sure you want to move <span className="font-semibold text-white">"{selectedFileForAction?.name}"</span> to trash?
+        </p>
+        <p className="text-sm text-gray-500 mt-2">
+          You can restore it later from the Trash folder.
+        </p>
+      </Modal>
+    </>
   );
 };
 
