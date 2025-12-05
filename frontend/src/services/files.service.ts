@@ -34,5 +34,20 @@ export const filesService = {
 
   async moveToTrash(id: string) {
     await api.delete(`/files/${id}`);
+  },
+
+  async uploadFile(file: File, folderId?: string): Promise<FileItem> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (folderId) {
+      formData.append('folderId', folderId);
+    }
+
+    const response = await api.post('/files/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
   }
 };
