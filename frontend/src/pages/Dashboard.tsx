@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import FileTable from '../components/FileTable';
@@ -14,23 +15,24 @@ const Dashboard: React.FC = () => {
   const [recentFiles, setRecentFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsData, filesData] = await Promise.all([
-          dashboardService.getStats(),
-          dashboardService.getRecentFiles()
-        ]);
-        setStats(statsData);
-        setRecentFiles(filesData);
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [statsData, filesData] = await Promise.all([
+        dashboardService.getStats(),
+        dashboardService.getRecentFiles()
+      ]);
+      setStats(statsData);
+      setRecentFiles(filesData);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
+  useEffect(() => {
+    loadData();
   }, []);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -50,12 +52,7 @@ const Dashboard: React.FC = () => {
       await filesService.uploadFile(file);
 
       // Refresh data
-      const [statsData, filesData] = await Promise.all([
-        dashboardService.getStats(),
-        dashboardService.getRecentFiles()
-      ]);
-      setStats(statsData);
-      setRecentFiles(filesData);
+      await loadData();
 
       // Reset input
       if (fileInputRef.current) {
@@ -139,14 +136,14 @@ const Dashboard: React.FC = () => {
             {loading ? (
               <div className="p-8 text-center text-gray-400">Loading files...</div>
             ) : recentFiles.length > 0 ? (
-              <FileTable viewMode={viewMode} files={recentFiles} />
+              <FileTable viewMode={viewMode} files={recentFiles} onRefresh={loadData} />
             ) : (
               <div className="p-8 text-center text-gray-400">No recent files found.</div>
             )}
           </div>
         </div>
       </div>
-    </MainLayout >
+    </MainLayout>
   );
 };
 
