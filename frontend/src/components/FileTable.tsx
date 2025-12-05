@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { filesService } from '../services/files.service';
 
 export interface FileItem {
   id: string;
@@ -8,6 +9,12 @@ export interface FileItem {
   createdAt: string;
   updatedAt: string;
   isFolder: boolean;
+}
+
+export interface FileTableProps {
+  viewMode: 'list' | 'grid';
+  files: FileItem[];
+  onRefresh?: () => void;
 }
 
 const formatSize = (bytes: number) => {
@@ -30,29 +37,155 @@ const getIcon = (mimeType: string) => {
   } else if (mimeType.includes('video')) {
     return <div className="flex items-center justify-center size-10 rounded-lg bg-orange-500/10 text-orange-500"><span className="material-symbols-outlined">videocam</span></div>;
   } else if (mimeType.includes('zip') || mimeType.includes('compressed')) {
-    return <div className="flex items-center justify-center size-10 rounded-lg bg-purple-500/10 text-purple-500"><span className="material-symbols-outlined">folder_zip</span></div>;
-  } else {
-    return <div className="flex items-center justify-center size-10 rounded-lg bg-gray-500/10 text-gray-500"><span className="material-symbols-outlined">draft</span></div>;
+    return <div className="flex items-center justify-center size-10 rounded-lg bg-purple-500/10 text-purple-500"><span className="material-symbols-outlined">archive</span></div>;
+  } else if (mimeType.includes('folder')) {
+    return <div className="flex items-center justify-center size-10 rounded-lg bg-yellow-500/10 text-yellow-500"><span className="material-symbols-outlined">folder</span></div>;
+  } else if (mimeType.includes('text')) {
+    return <div className="flex items-center justify-center size-10 rounded-lg bg-blue-500/10 text-blue-500"><span className="material-symbols-outlined">article</span></div>;
   }
+  return <div className="flex items-center justify-center size-10 rounded-lg bg-gray-500/10 text-gray-500"><span className="material-symbols-outlined">insert_drive_file</span></div>;
 };
 
-interface FileTableProps {
-  viewMode: 'list' | 'grid';
-  files: FileItem[];
-}
-
-const FileTable: React.FC<FileTableProps> = ({ viewMode, files }) => {
-  const [selectedFiles, setSelectedFiles] = React.useState<Set<string>>(new Set());
+const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh }) => {
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleSelection = (id: string) => {
-    const newSelection = new Set(selectedFiles);
-    if (newSelection.has(id)) {
-      newSelection.delete(id);
-    } else {
-      newSelection.add(id);
-    }
-    setSelectedFiles(newSelection);
+    setSelectedFiles((prevSelected) => {
+      const newSelected = new Set(prevSelected);
+      if (newSelected.has(id)) {
+        newSelected.delete(id);
+      } else {
+        newSelected.add(id);
+      }
+      return newSelected;
+    });
   };
+
+  const handleMenuClick = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (activeMenuId === id) {
+      setActiveMenuId(null);
+      setMenuPosition(null);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setActiveMenuId(id);
+      setMenuPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
+  };
+
+  const handleDownload = async (file: FileItem) => {
+    try {
+      await filesService.downloadFile(file.id, file.name);
+      setActiveMenuId(null);
+      setMenuPosition(null);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download file');
+    }
+  };
+
+  const handleRename = async (file: FileItem) => {
+    const newName = window.prompt('Enter new name:', file.name);
+    if (newName && newName !== file.name) {
+      try {
+        await filesService.renameFile(file.id, newName);
+        setActiveMenuId(null);
+        setMenuPosition(null);
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Rename failed:', error);
+        alert('Failed to rename file');
+      }
+    }
+  };
+
+  const handleDelete = async (file: FileItem) => {
+    if (window.confirm(`Are you sure you want to delete "${file.name}"?`)) {
+      try {
+        await filesService.moveToTrash(file.id);
+        setActiveMenuId(null);
+        setMenuPosition(null);
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Delete failed:', error);
+        alert('Failed to delete file');
+      }
+    }
+  };
+
+  const renderMenu = (file: FileItem) => {
+    if (!menuPosition) return null;
+
+    return (
+      <div
+        ref={menuRef}
+        className="fixed w-48 bg-[#1a2233] border border-[#232f48] rounded-xl shadow-lg z-[9999] overflow-hidden"
+        style={{
+          top: `${menuPosition.top}px`,
+          right: `${menuPosition.right}px`
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="py-1">
+          <button
+            onClick={() => handleDownload(file)}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+          >
+            <span className="material-symbols-outlined text-[20px]">download</span>
+            Download
+          </button>
+          <button
+            onClick={() => handleRename(file)}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+          >
+            <span className="material-symbols-outlined text-[20px]">edit</span>
+            Rename
+          </button>
+          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors">
+            <span className="material-symbols-outlined text-[20px]">drive_file_move</span>
+            Move
+          </button>
+          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors">
+            <span className="material-symbols-outlined text-[20px]">share</span>
+            Share
+          </button>
+          <div className="border-t border-[#232f48] my-1"></div>
+          <button
+            onClick={() => handleDelete(file)}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#232f48] hover:text-red-300 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[20px]">delete</span>
+            Delete
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveMenuId(null);
+        setMenuPosition(null);
+      }
+    };
+
+    if (activeMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activeMenuId]);
 
   if (viewMode === 'grid') {
     return (
@@ -74,9 +207,15 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files }) => {
                 </p>
                 <p className="text-xs text-gray-500 dark:text-[#92a4c9] mt-1">{formatSize(file.size)} • {formatDate(file.createdAt)}</p>
               </div>
-              <button className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#2d3a54] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="material-symbols-outlined text-lg">more_vert</span>
-              </button>
+              <div className="absolute top-2 right-2">
+                <button
+                  onClick={(e) => handleMenuClick(e, file.id)}
+                  className={`p-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#2d3a54] text-gray-400 transition-opacity ${activeMenuId === file.id ? 'opacity-100 bg-gray-100 dark:bg-[#2d3a54]' : 'opacity-0 group-hover:opacity-100'}`}
+                >
+                  <span className="material-symbols-outlined text-lg">more_vert</span>
+                </button>
+                {activeMenuId === file.id && renderMenu(file)}
+              </div>
             </div>
           ))}
         </div>
@@ -114,10 +253,14 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files }) => {
                 </td>
                 <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden md:table-cell">{formatDate(file.createdAt)}</td>
                 <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden sm:table-cell">{formatSize(file.size)}</td>
-                <td className="p-3 text-right">
-                  <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#2d3a54] text-gray-500 dark:text-[#92a4c9] transition-colors">
+                <td className="p-3 text-right relative">
+                  <button
+                    onClick={(e) => handleMenuClick(e, file.id)}
+                    className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#2d3a54] text-gray-500 dark:text-[#92a4c9] transition-colors ${activeMenuId === file.id ? 'bg-gray-200 dark:bg-[#2d3a54]' : ''}`}
+                  >
                     <span className="material-symbols-outlined text-lg">more_horiz</span>
                   </button>
+                  {activeMenuId === file.id && renderMenu(file)}
                 </td>
               </tr>
             ))}
