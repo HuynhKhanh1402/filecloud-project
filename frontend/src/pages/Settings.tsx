@@ -1,10 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import AvatarPlaceholder from '../components/AvatarPlaceholder';
+import { userService, type UserProfile, type UserStats } from '../services/user.service';
+import { formatSize } from '../utils/format';
+import { calculatePercentage } from '../utils/math';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [profileData, statsData] = await Promise.all([
+          userService.getProfile(),
+          userService.getStats()
+        ]);
+        setProfile(profileData);
+        setStats(statsData);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const storagePercentage = stats ? calculatePercentage(stats.usedStorage, stats.maxStorage) : 0;
 
   return (
     <MainLayout>
@@ -22,8 +48,8 @@ const Settings: React.FC = () => {
               <div className="flex items-center gap-4">
                 <AvatarPlaceholder size="md" />
                 <div className="flex-1">
-                  <p className="text-white font-semibold">John Doe</p>
-                  <p className="text-gray-400 text-sm">john.doe@example.com</p>
+                  <p className="text-white font-semibold">{loading ? 'Loading...' : profile?.fullName}</p>
+                  <p className="text-gray-400 text-sm">{profile?.email || ''}</p>
                 </div>
                 <button
                   onClick={() => navigate('/profile/edit')}
@@ -42,10 +68,12 @@ const Settings: React.FC = () => {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-400">Storage Used</span>
-                  <span className="text-sm font-semibold text-white">15.7 GB / 50 GB</span>
+                  <span className="text-sm font-semibold text-white">
+                    {loading ? 'Loading...' : `${formatSize(stats?.usedStorage || 0)} / ${formatSize(stats?.maxStorage || 0)}`}
+                  </span>
                 </div>
                 <div className="w-full bg-[#232f48] rounded-full h-2">
-                  <div className="bg-primary h-2 rounded-full" style={{ width: '31%' }}></div>
+                  <div className="bg-primary h-2 rounded-full" style={{ width: `${storagePercentage}%` }}></div>
                 </div>
               </div>
               <button className="w-fit px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors">

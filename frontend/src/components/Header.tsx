@@ -1,12 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AvatarPlaceholder from './AvatarPlaceholder';
 import { authService } from '../services/auth.service';
+import { userService, type UserProfile } from '../services/user.service';
 
 const Header: React.FC = () => {
-  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Load user profile
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const data = await userService.getProfile();
+        setProfile(data);
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+      }
+    };
+    loadProfile();
+  }, []);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -64,8 +79,8 @@ const Header: React.FC = () => {
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-[#1a2233] border border-[#232f48] rounded-xl shadow-lg overflow-hidden z-50">
               <div className="p-3 border-b border-[#232f48]">
-                <p className="text-white font-semibold text-sm">John Doe</p>
-                <p className="text-gray-400 text-xs">john.doe@example.com</p>
+                <p className="text-white font-semibold text-sm">{profile?.fullName || 'Loading...'}</p>
+                <p className="text-gray-400 text-xs">{profile?.email || ''}</p>
               </div>
               <div className="py-1">
                 <button

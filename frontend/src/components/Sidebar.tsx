@@ -1,7 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
+import { userService, type UserStats } from '../services/user.service';
+import { formatSize } from '../utils/format';
+import { calculatePercentage } from '../utils/math';
 
 const Sidebar: React.FC = () => {
+  const [stats, setStats] = useState<UserStats | null>(null);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await userService.getStats();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    };
+    loadStats();
+  }, []);
+
+  const storagePercentage = stats ? calculatePercentage(stats.usedStorage, stats.maxStorage) : 0;
+
   return (
     <aside className="hidden md:flex flex-col w-64 h-screen bg-[#101622] border-r border-[#232f48] fixed left-0 top-0 z-50">
       {/* Logo */}
@@ -55,12 +74,14 @@ const Sidebar: React.FC = () => {
       <div className="p-4 m-3 bg-[#1a2233] rounded-xl border border-[#232f48]">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-semibold text-white">Storage</span>
-          <span className="text-xs text-primary">31%</span>
+          <span className="text-xs text-primary">{storagePercentage}%</span>
         </div>
         <div className="w-full bg-[#232f48] rounded-full h-1.5 mb-2">
-          <div className="bg-primary h-1.5 rounded-full" style={{ width: '31%' }}></div>
+          <div className="bg-primary h-1.5 rounded-full" style={{ width: `${storagePercentage}%` }}></div>
         </div>
-        <p className="text-[10px] text-gray-400">15.7 GB of 50 GB used</p>
+        <p className="text-[10px] text-gray-400">
+          {stats ? `${formatSize(stats.usedStorage)} of ${formatSize(stats.maxStorage)} used` : 'Loading...'}
+        </p>
         <button className="w-full mt-3 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-lg transition-colors">
           Upgrade
         </button>
