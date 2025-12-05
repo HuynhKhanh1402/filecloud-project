@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import FileTable from '../components/FileTable';
 import ViewToggle from '../components/ViewToggle';
+import Modal from '../components/Modal';
 import { dashboardService } from '../services/dashboard.service';
 import { filesService } from '../services/files.service';
 import type { UserStats, FileItem } from '../services/dashboard.service';
@@ -14,6 +15,10 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [recentFiles, setRecentFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [createFolderModalOpen, setCreateFolderModalOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -66,6 +71,28 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+
+    setIsProcessing(true);
+    setErrorMessage('');
+    try {
+      await filesService.createFolder(newFolderName.trim());
+      setCreateFolderModalOpen(false);
+      setNewFolderName('');
+      await loadData();
+    } catch (error: any) {
+      console.error('Failed to create folder:', error);
+      if (error.response?.status === 409) {
+        setErrorMessage('A folder with this name already exists in this location.');
+      } else {
+        setErrorMessage(error.response?.data?.message || 'Failed to create folder. Please try again.');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="flex flex-col gap-8">
@@ -74,7 +101,10 @@ const Dashboard: React.FC = () => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-white">Overview</h2>
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#1a2233] hover:bg-[#232f48] text-white text-sm font-medium rounded-lg border border-[#232f48] transition-colors">
+              <button
+                onClick={() => setCreateFolderModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#1a2233] hover:bg-[#232f48] text-white text-sm font-medium rounded-lg border border-[#232f48] transition-colors"
+              >
                 <span className="material-symbols-outlined text-[20px]">create_new_folder</span>
                 New Folder
               </button>
@@ -143,6 +173,57 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Folder Modal */}
+      <Modal
+        isOpen={createFolderModalOpen}
+        onClose={() => {
+          setCreateFolderModalOpen(false);
+          setNewFolderName('');
+          setErrorMessage('');
+        }}
+        title="Create New Folder"
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setCreateFolderModalOpen(false);
+                setNewFolderName('');
+                setErrorMessage('');
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCreateFolder}
+              disabled={isProcessing || !newFolderName.trim()}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? 'Creating...' : 'Create'}
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <label className="text-sm text-gray-400">Folder name</label>
+          <input
+            type="text"
+            value={newFolderName}
+            onChange={(e) => {
+              setNewFolderName(e.target.value);
+              setErrorMessage('');
+            }}
+            className="w-full px-4 py-2 bg-[#0f172a] border border-[#232f48] rounded-lg text-white focus:outline-none focus:border-primary transition-colors"
+            placeholder="Enter folder name"
+            autoFocus
+            onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+          />
+          {errorMessage && (
+            <p className="text-sm text-red-400">{errorMessage}</p>
+          )}
+        </div>
+      </Modal>
     </MainLayout>
   );
 };

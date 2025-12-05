@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { filesService } from '../services/files.service';
+import { filesService, type FolderItem } from '../services/files.service';
 import type { FileItem } from '../services/dashboard.service';
 import Modal from './Modal';
 import { formatSize, formatDate } from '../utils/format';
@@ -10,9 +10,11 @@ export interface FileTableProps {
   files: FileItem[];
   onRefresh?: () => void;
   isTrash?: boolean;
+  folders?: FolderItem[];
+  currentFolderId?: string | null;
 }
 
-const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTrash = false }) => {
+const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTrash = false, folders = [], currentFolderId = null }) => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
@@ -20,7 +22,9 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
   // Modal States
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [moveModalOpen, setMoveModalOpen] = useState(false);
   const [selectedFileForAction, setSelectedFileForAction] = useState<FileItem | null>(null);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -146,6 +150,30 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
     }
   };
 
+  const openMoveModal = (file: FileItem) => {
+    setSelectedFileForAction(file);
+    setSelectedFolderId(null);
+    setMoveModalOpen(true);
+    setActiveMenuId(null);
+    setMenuPosition(null);
+  };
+
+  const handleMoveSubmit = async () => {
+    if (!selectedFileForAction) return;
+
+    setIsProcessing(true);
+    try {
+      await filesService.moveFile(selectedFileForAction.id, selectedFolderId);
+      if (onRefresh) onRefresh();
+      setMoveModalOpen(false);
+      setSelectedFolderId(null);
+    } catch (error) {
+      console.error('Move failed:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const renderMenu = (file: FileItem) => {
     if (!menuPosition) return null;
 
@@ -194,7 +222,10 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
                 <span className="material-symbols-outlined text-[20px]">edit</span>
                 Rename
               </button>
-              <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors">
+              <button
+                onClick={() => openMoveModal(file)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+              >
                 <span className="material-symbols-outlined text-[20px]">drive_file_move</span>
                 Move
               </button>
@@ -392,6 +423,85 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
             You can restore it later from the Trash folder.
           </p>
         )}
+      </Modal>
+
+      {/* Move File Modal */}
+      <Modal
+        isOpen={moveModalOpen}
+        onClose={() => {
+          setMoveModalOpen(false);
+          setSelectedFolderId(null);
+        }}
+        title="Move File"
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setMoveModalOpen(false);
+                setSelectedFolderId(null);
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleMoveSubmit}
+              disabled={isProcessing}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? 'Moving...' : 'Move'}
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <label className="text-sm text-gray-400">Select destination folder</label>
+          
+          {/* Root folder option - only show if not already in root */}
+          {currentFolderId && (
+            <button
+              onClick={() => setSelectedFolderId(null)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${
+                selectedFolderId === null
+                  ? 'bg-primary/20 border-primary text-white'
+                  : 'bg-[#0f172a] border-[#232f48] text-gray-300 hover:border-primary/50'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[24px]">home</span>
+              <span className="font-medium">Root (My Files)</span>
+            </button>
+          )}
+
+          {/* Folder list */}
+          <div className="max-h-[300px] overflow-y-auto space-y-2">
+            {folders.map((folder) => (
+              <button
+                key={folder.id}
+                onClick={() => setSelectedFolderId(folder.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${
+                  selectedFolderId === folder.id
+                    ? 'bg-primary/20 border-primary text-white'
+                    : 'bg-[#0f172a] border-[#232f48] text-gray-300 hover:border-primary/50'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[24px] text-primary">folder</span>
+                <span className="font-medium">{folder.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {folders.length === 0 && !currentFolderId && (
+            <p className="text-sm text-gray-500 text-center py-4">
+              No folders available. Create a new folder first.
+            </p>
+          )}
+          
+          {folders.length === 0 && currentFolderId && (
+            <p className="text-sm text-gray-500 text-center py-4">
+              No other folders available in this location.
+            </p>
+          )}
+        </div>
       </Modal>
     </>
   );

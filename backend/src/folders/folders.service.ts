@@ -191,27 +191,47 @@ export class FoldersService {
   async delete(userId: string, folderId: string): Promise<{ message: string }> {
     await this.findOne(userId, folderId);
 
-    // Check if folder has subfolders or files
-    const [subfolderCount, fileCount] = await Promise.all([
-      this.prisma.folder.count({
-        where: { parentId: folderId },
-      }),
-      this.prisma.file.count({
-        where: { folderId, isDeleted: false },
-      }),
-    ]);
+    // Recursively delete all subfolders and files
+    await this.deleteRecursive(userId, folderId);
 
-    if (subfolderCount > 0 || fileCount > 0) {
-      throw new BadRequestException(
-        'Cannot delete folder with contents. Please empty it first.',
-      );
+    return { message: 'Folder deleted successfully' };
+  }
+
+  private async deleteRecursive(
+    userId: string,
+    folderId: string,
+  ): Promise<void> {
+    // Get all subfolders
+    const subfolders = await this.prisma.folder.findMany({
+      where: { parentId: folderId, userId },
+    });
+
+    // Recursively delete subfolders
+    for (const subfolder of subfolders) {
+      await this.deleteRecursive(userId, subfolder.id);
     }
 
+    // Get all files in this folder
+    const files = await this.prisma.file.findMany({
+      where: { folderId, userId },
+    });
+
+    // Move all files to trash instead of deleting
+    for (const file of files) {
+      await this.prisma.file.update({
+        where: { id: file.id },
+        data: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          folderId: null, // Remove folder association
+        },
+      });
+    }
+
+    // Delete the folder itself
     await this.prisma.folder.delete({
       where: { id: folderId },
     });
-
-    return { message: 'Folder deleted successfully' };
   }
 
   async getBreadcrumb(userId: string, folderId: string) {

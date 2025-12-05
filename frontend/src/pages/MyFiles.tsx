@@ -25,8 +25,11 @@ const MyFiles: React.FC = () => {
   const [createFolderModalOpen, setCreateFolderModalOpen] = useState(false);
   const [renameFolderModalOpen, setRenameFolderModalOpen] = useState(false);
   const [deleteFolderModalOpen, setDeleteFolderModalOpen] = useState(false);
+  const [moveFolderModalOpen, setMoveFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [selectedDestinationFolderId, setSelectedDestinationFolderId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderMenuRef = useRef<HTMLDivElement>(null);
@@ -88,13 +91,19 @@ const MyFiles: React.FC = () => {
     if (!newFolderName.trim()) return;
 
     setIsProcessing(true);
+    setErrorMessage('');
     try {
       await filesService.createFolder(newFolderName.trim(), currentFolderId || undefined);
       setCreateFolderModalOpen(false);
       setNewFolderName('');
       await loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create folder:', error);
+      if (error.response?.status === 409) {
+        setErrorMessage('A folder with this name already exists in this location.');
+      } else {
+        setErrorMessage(error.response?.data?.message || 'Failed to create folder. Please try again.');
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -154,13 +163,19 @@ const MyFiles: React.FC = () => {
     if (!selectedFolderForAction || !newFolderName.trim()) return;
 
     setIsProcessing(true);
+    setErrorMessage('');
     try {
       await filesService.renameFolder(selectedFolderForAction.id, newFolderName.trim());
       setRenameFolderModalOpen(false);
       setNewFolderName('');
       await loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to rename folder:', error);
+      if (error.response?.status === 409) {
+        setErrorMessage('A folder with this name already exists in this location.');
+      } else {
+        setErrorMessage(error.response?.data?.message || 'Failed to rename folder. Please try again.');
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -188,6 +203,30 @@ const MyFiles: React.FC = () => {
     }
   };
 
+  const openMoveFolderModal = (folder: FolderItem) => {
+    setSelectedFolderForAction(folder);
+    setSelectedDestinationFolderId(null);
+    setMoveFolderModalOpen(true);
+    setActiveFolderMenuId(null);
+    setFolderMenuPosition(null);
+  };
+
+  const handleMoveFolderSubmit = async () => {
+    if (!selectedFolderForAction) return;
+
+    setIsProcessing(true);
+    try {
+      await filesService.moveFolder(selectedFolderForAction.id, selectedDestinationFolderId);
+      setMoveFolderModalOpen(false);
+      setSelectedDestinationFolderId(null);
+      await loadData();
+    } catch (error) {
+      console.error('Failed to move folder:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const renderFolderMenu = (folder: FolderItem) => {
     if (!folderMenuPosition) return null;
 
@@ -209,7 +248,10 @@ const MyFiles: React.FC = () => {
             <span className="material-symbols-outlined text-[20px]">edit</span>
             Rename
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors">
+          <button
+            onClick={() => openMoveFolderModal(folder)}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+          >
             <span className="material-symbols-outlined text-[20px]">drive_file_move</span>
             Move
           </button>
@@ -391,7 +433,13 @@ const MyFiles: React.FC = () => {
             {files.length > 0 && (
               <div className="mt-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 px-4">Files</h2>
-                <FileTable viewMode={viewMode} files={files} onRefresh={loadData} />
+                <FileTable 
+                  viewMode={viewMode} 
+                  files={files} 
+                  onRefresh={loadData}
+                  folders={folders}
+                  currentFolderId={currentFolderId}
+                />
               </div>
             )}
 
@@ -432,6 +480,7 @@ const MyFiles: React.FC = () => {
         onClose={() => {
           setCreateFolderModalOpen(false);
           setNewFolderName('');
+          setErrorMessage('');
         }}
         title="Create New Folder"
         footer={
@@ -440,6 +489,7 @@ const MyFiles: React.FC = () => {
               onClick={() => {
                 setCreateFolderModalOpen(false);
                 setNewFolderName('');
+                setErrorMessage('');
               }}
               className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
             >
@@ -460,12 +510,18 @@ const MyFiles: React.FC = () => {
           <input
             type="text"
             value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
+            onChange={(e) => {
+              setNewFolderName(e.target.value);
+              setErrorMessage('');
+            }}
             className="w-full px-4 py-2 bg-[#0f172a] border border-[#232f48] rounded-lg text-white focus:outline-none focus:border-primary transition-colors"
             placeholder="Enter folder name"
             autoFocus
             onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
           />
+          {errorMessage && (
+            <p className="text-sm text-red-400">{errorMessage}</p>
+          )}
         </div>
       </Modal>
 
@@ -475,6 +531,7 @@ const MyFiles: React.FC = () => {
         onClose={() => {
           setRenameFolderModalOpen(false);
           setNewFolderName('');
+          setErrorMessage('');
         }}
         title="Rename Folder"
         footer={
@@ -483,6 +540,7 @@ const MyFiles: React.FC = () => {
               onClick={() => {
                 setRenameFolderModalOpen(false);
                 setNewFolderName('');
+                setErrorMessage('');
               }}
               className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
             >
@@ -503,12 +561,18 @@ const MyFiles: React.FC = () => {
           <input
             type="text"
             value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
+            onChange={(e) => {
+              setNewFolderName(e.target.value);
+              setErrorMessage('');
+            }}
             className="w-full px-4 py-2 bg-[#0f172a] border border-[#232f48] rounded-lg text-white focus:outline-none focus:border-primary transition-colors"
             placeholder="Folder name"
             autoFocus
             onKeyDown={(e) => e.key === 'Enter' && handleRenameFolderSubmit()}
           />
+          {errorMessage && (
+            <p className="text-sm text-red-400">{errorMessage}</p>
+          )}
         </div>
       </Modal>
 
@@ -541,6 +605,90 @@ const MyFiles: React.FC = () => {
         <p className="text-sm text-gray-500 mt-2">
           All files and subfolders inside will also be deleted. This action cannot be undone.
         </p>
+      </Modal>
+
+      {/* Move Folder Modal */}
+      <Modal
+        isOpen={moveFolderModalOpen}
+        onClose={() => {
+          setMoveFolderModalOpen(false);
+          setSelectedDestinationFolderId(null);
+        }}
+        title="Move Folder"
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setMoveFolderModalOpen(false);
+                setSelectedDestinationFolderId(null);
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleMoveFolderSubmit}
+              disabled={isProcessing}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? 'Moving...' : 'Move'}
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-gray-400">
+            Move <span className="font-semibold text-white">"{selectedFolderForAction?.name}"</span> to:
+          </p>
+          
+          {/* Root folder option - only show if not already in root */}
+          {currentFolderId && (
+            <button
+              onClick={() => setSelectedDestinationFolderId(null)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${
+                selectedDestinationFolderId === null
+                  ? 'bg-primary/20 border-primary text-white'
+                  : 'bg-[#0f172a] border-[#232f48] text-gray-300 hover:border-primary/50'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[24px]">home</span>
+              <span className="font-medium">Root (My Files)</span>
+            </button>
+          )}
+
+          {/* Folder list - exclude current folder being moved */}
+          <div className="max-h-[300px] overflow-y-auto space-y-2">
+            {folders
+              .filter(f => f.id !== selectedFolderForAction?.id)
+              .map((folder) => (
+                <button
+                  key={folder.id}
+                  onClick={() => setSelectedDestinationFolderId(folder.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${
+                    selectedDestinationFolderId === folder.id
+                      ? 'bg-primary/20 border-primary text-white'
+                      : 'bg-[#0f172a] border-[#232f48] text-gray-300 hover:border-primary/50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[24px] text-primary">folder</span>
+                  <span className="font-medium">{folder.name}</span>
+                </button>
+              ))
+            }
+          </div>
+
+          {folders.filter(f => f.id !== selectedFolderForAction?.id).length === 0 && !currentFolderId && (
+            <p className="text-sm text-gray-500 text-center py-4">
+              No other folders available. Create a new folder first.
+            </p>
+          )}
+          
+          {folders.filter(f => f.id !== selectedFolderForAction?.id).length === 0 && currentFolderId && (
+            <p className="text-sm text-gray-500 text-center py-4">
+              No other folders available in this location.
+            </p>
+          )}
+        </div>
       </Modal>
     </MainLayout>
   );
