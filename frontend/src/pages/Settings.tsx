@@ -48,7 +48,15 @@ const Settings: React.FC = () => {
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Profile</h3>
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-4">
-                <AvatarPlaceholder size="md" />
+                {profile?.avatar ? (
+                  <img 
+                    src={profile.avatar} 
+                    alt={profile.fullName || 'User avatar'}
+                    className="w-16 h-16 rounded-full object-cover ring-2 ring-gray-300 dark:ring-[#232f48]"
+                  />
+                ) : (
+                  <AvatarPlaceholder size="md" />
+                )}
                 <div className="flex-1">
                   <p className="text-gray-900 dark:text-white font-semibold">{loading ? 'Loading...' : profile?.fullName}</p>
                   <p className="text-gray-500 dark:text-gray-400 text-sm">{profile?.email || ''}</p>
