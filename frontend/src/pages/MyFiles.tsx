@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import FileTable from '../components/FileTable';
 import FilterBar from '../components/FilterBar';
@@ -6,7 +6,6 @@ import ViewToggle from '../components/ViewToggle';
 import Modal from '../components/Modal';
 import { filesService, type FolderItem } from '../services/files.service';
 import type { FileItem } from '../services/dashboard.service';
-import FileIcon from '../components/FileIcon';
 import { formatDate } from '../utils/format';
 
 const MyFiles: React.FC = () => {
@@ -34,7 +33,7 @@ const MyFiles: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderMenuRef = useRef<HTMLDivElement>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [filesData, foldersData] = await Promise.all([
@@ -56,11 +55,11 @@ const MyFiles: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentFolderId]);
 
   useEffect(() => {
     loadData();
-  }, [currentFolderId]);
+  }, [loadData]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -97,12 +96,13 @@ const MyFiles: React.FC = () => {
       setCreateFolderModalOpen(false);
       setNewFolderName('');
       await loadData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to create folder:', error);
-      if (error.response?.status === 409) {
+      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      if (err.response?.status === 409) {
         setErrorMessage('A folder with this name already exists in this location.');
       } else {
-        setErrorMessage(error.response?.data?.message || 'Failed to create folder. Please try again.');
+        setErrorMessage(err.response?.data?.message || 'Failed to create folder. Please try again.');
       }
     } finally {
       setIsProcessing(false);
@@ -169,12 +169,13 @@ const MyFiles: React.FC = () => {
       setRenameFolderModalOpen(false);
       setNewFolderName('');
       await loadData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to rename folder:', error);
-      if (error.response?.status === 409) {
+      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      if (err.response?.status === 409) {
         setErrorMessage('A folder with this name already exists in this location.');
       } else {
-        setErrorMessage(error.response?.data?.message || 'Failed to rename folder. Please try again.');
+        setErrorMessage(err.response?.data?.message || 'Failed to rename folder. Please try again.');
       }
     } finally {
       setIsProcessing(false);

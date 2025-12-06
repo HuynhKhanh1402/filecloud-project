@@ -81,12 +81,13 @@ const Dashboard: React.FC = () => {
       setCreateFolderModalOpen(false);
       setNewFolderName('');
       await loadData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to create folder:', error);
-      if (error.response?.status === 409) {
+      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      if (err.response?.status === 409) {
         setErrorMessage('A folder with this name already exists in this location.');
       } else {
-        setErrorMessage(error.response?.data?.message || 'Failed to create folder. Please try again.');
+        setErrorMessage(err.response?.data?.message || 'Failed to create folder. Please try again.');
       }
     } finally {
       setIsProcessing(false);
