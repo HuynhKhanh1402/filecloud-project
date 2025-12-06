@@ -109,10 +109,10 @@ const EditProfile: React.FC = () => {
         </div>
 
         <div className="max-w-3xl">
-          <div className="bg-[#1a2233] rounded-xl border border-[#232f48] p-6">
+          <div className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-[#232f48] p-6 transition-colors">
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               {/* Avatar Section */}
-              <div className="flex items-center gap-6 pb-6 border-b border-[#232f48]">
+              <div className="flex items-center gap-6 pb-6 border-b border-gray-200 dark:border-[#232f48]">
                 {profile?.avatar ? (
                   <img
                     src={profile.avatar}
@@ -153,30 +153,30 @@ const EditProfile: React.FC = () => {
               {/* Form Fields */}
               <div className="grid grid-cols-1 gap-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-gray-300">Full Name</label>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Full Name</label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full p-3 bg-[#232f48] border border-[#2d3a54] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    className="w-full p-3 bg-gray-50 dark:bg-[#232f48] border border-gray-200 dark:border-[#2d3a54] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     placeholder="Enter your full name"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300">Email</label>
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Email</label>
                 <input
                   type="email"
                   value={profile?.email || ''}
                   disabled
-                  className="w-full p-3 bg-[#232f48] border border-[#2d3a54] rounded-lg text-gray-400 cursor-not-allowed opacity-75 focus:outline-none"
+                  className="w-full p-3 bg-gray-100 dark:bg-[#232f48] border border-gray-200 dark:border-[#2d3a54] rounded-lg text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-75 focus:outline-none"
                   title="Email cannot be changed"
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t border-[#232f48]">
+              <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-[#232f48]">
                 <button
                   type="submit"
                   disabled={isSaving}
@@ -199,7 +199,7 @@ const EditProfile: React.FC = () => {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#232f48] rounded-lg transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -216,7 +216,7 @@ const EditProfile: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
               <span className="material-symbols-outlined text-red-400 text-[24px]">warning</span>
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Are you sure you want to remove your avatar? This action cannot be undone.
               </p>
             </div>

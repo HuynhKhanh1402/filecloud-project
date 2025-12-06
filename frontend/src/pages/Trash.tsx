@@ -48,7 +48,7 @@ const Trash: React.FC = () => {
               <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
               <button
                 onClick={handleEmptyTrash}
-                className="flex items-center gap-2 px-4 py-2 bg-[#1a2233] hover:bg-[#232f48] text-white text-sm font-medium rounded-lg border border-[#232f48] transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1a2233] hover:bg-gray-50 dark:hover:bg-[#232f48] text-gray-900 dark:text-white text-sm font-medium rounded-lg border border-gray-200 dark:border-[#232f48] transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">delete_sweep</span>
                 Empty Trash
@@ -60,13 +60,13 @@ const Trash: React.FC = () => {
         {loading ? (
           <div className="p-8 text-center text-gray-400">Loading trash...</div>
         ) : files.length > 0 ? (
-          <div className="bg-[#1a2233] rounded-xl border border-[#232f48] overflow-hidden">
+          <div className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-[#232f48] overflow-hidden transition-colors">
             <FileTable viewMode={viewMode} files={files} onRefresh={loadTrash} isTrash={true} />
           </div>
         ) : (
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-20 px-4">
-            <div className="size-24 rounded-full bg-[#1a2233] flex items-center justify-center mb-6">
+            <div className="size-24 rounded-full bg-gray-100 dark:bg-[#1a2233] flex items-center justify-center mb-6">
               <span className="material-symbols-outlined text-[64px] text-gray-500">delete</span>
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Trash is empty</h3>

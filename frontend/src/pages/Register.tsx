@@ -8,6 +8,8 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -45,10 +47,10 @@ const Register: React.FC = () => {
           </div>
         )}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">Full Name</label>
+          <label className="text-sm font-medium text-gray-700">Full Name</label>
           <input
             type="text"
-            className="w-full p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="Enter your full name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -56,10 +58,10 @@ const Register: React.FC = () => {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">Email</label>
+          <label className="text-sm font-medium text-gray-700">Email</label>
           <input
             type="email"
-            className="w-full p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="Enter email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -67,30 +69,44 @@ const Register: React.FC = () => {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">Password</label>
+          <label className="text-sm font-medium text-gray-700">Password</label>
           <div className="relative">
             <input
-              type="password"
-              className="w-full p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              type={showPassword ? 'text' : 'password'}
+              className="w-full px-3 py-3 pr-11 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
               placeholder="Create password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <span className="material-symbols-outlined text-xl">{showPassword ? 'visibility' : 'visibility_off'}</span>
+            </button>
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">Confirm Password</label>
+          <label className="text-sm font-medium text-gray-700">Confirm Password</label>
           <div className="relative">
             <input
-              type="password"
-              className="w-full p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              type={showConfirmPassword ? 'text' : 'password'}
+              className="w-full px-3 py-3 pr-11 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
               placeholder="Re-enter password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <span className="material-symbols-outlined text-xl">{showConfirmPassword ? 'visibility' : 'visibility_off'}</span>
+            </button>
           </div>
         </div>
 
@@ -103,7 +119,7 @@ const Register: React.FC = () => {
         </button>
       </form>
 
-      <p className="text-center text-sm text-gray-400 mt-4">
+      <p className="text-center text-sm text-gray-600 mt-4">
         Already have an account? <Link to="/login" className="text-primary font-medium hover:underline">Login</Link>
       </p>
     </AuthLayout>

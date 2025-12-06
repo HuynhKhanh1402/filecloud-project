@@ -233,7 +233,7 @@ const MyFiles: React.FC = () => {
     return (
       <div
         ref={folderMenuRef}
-        className="fixed w-48 bg-[#1a2233] border border-[#232f48] rounded-xl shadow-lg z-[9999] overflow-hidden"
+        className="fixed w-48 bg-white dark:bg-[#1a2233] border border-gray-200 dark:border-[#232f48] rounded-xl shadow-lg z-[9999] overflow-hidden transition-colors"
         style={{
           top: `${folderMenuPosition.top}px`,
           left: `${folderMenuPosition.left}px`
@@ -301,7 +301,7 @@ const MyFiles: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCreateFolderModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1a2233] hover:bg-[#232f48] text-white text-sm font-medium rounded-lg transition-colors border border-[#232f48]"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1a2233] hover:bg-gray-200 dark:hover:bg-[#232f48] text-gray-900 dark:text-white text-sm font-medium rounded-lg transition-colors border border-gray-300 dark:border-[#232f48]"
             >
               <span className="material-symbols-outlined text-[20px]">create_new_folder</span>
               New Folder
@@ -370,7 +370,7 @@ const MyFiles: React.FC = () => {
                         <div
                           key={folder.id}
                           onClick={() => handleFolderClick(folder.id)}
-                          className="group relative p-4 rounded-xl border cursor-pointer transition-all duration-200 bg-white dark:bg-[#1a2233] border-gray-200 dark:border-[#232f48] hover:border-primary/50 dark:hover:border-primary/50 flex flex-col items-center gap-3 text-center"
+                          className="group relative p-4 rounded-xl border cursor-pointer transition-all duration-200 bg-white dark:bg-[#1a2233] border-gray-200 dark:border-[#232f48] hover:border-primary/50 flex flex-col items-center gap-3 text-center"
                         >
                           <span className="material-symbols-outlined text-[48px] text-primary">folder</span>
                           <div className="w-full">
@@ -452,7 +452,7 @@ const MyFiles: React.FC = () => {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setCreateFolderModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#1a2233] hover:bg-[#232f48] text-white text-sm font-medium rounded-lg transition-colors border border-[#232f48]"
+                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1a2233] hover:bg-gray-50 dark:hover:bg-[#232f48] text-gray-900 dark:text-white text-sm font-medium rounded-lg transition-colors border border-gray-200 dark:border-[#232f48]"
                   >
                     <span className="material-symbols-outlined text-[20px]">create_new_folder</span>
                     New Folder

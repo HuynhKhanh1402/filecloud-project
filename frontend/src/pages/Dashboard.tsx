@@ -99,11 +99,11 @@ const Dashboard: React.FC = () => {
         {/* Overview Section */}
         <div>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Overview</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Overview</h2>
             <div className="flex gap-3">
               <button
                 onClick={() => setCreateFolderModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#1a2233] hover:bg-[#232f48] text-white text-sm font-medium rounded-lg border border-[#232f48] transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1a2233] hover:bg-gray-200 dark:hover:bg-[#232f48] text-gray-900 dark:text-white text-sm font-medium rounded-lg border border-gray-300 dark:border-[#232f48] transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">create_new_folder</span>
                 New Folder
@@ -128,13 +128,13 @@ const Dashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Storage Card */}
-          <div className="p-6 bg-[#1a2233] rounded-xl border border-[#232f48]">
-            <p className="text-gray-400 text-sm mb-1">Storage Used</p>
-            <p className="text-2xl font-bold text-white mb-4">
+          <div className="p-6 bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-[#232f48] transition-colors">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Storage Used</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               {stats ? formatSize(stats.usedStorage) : '...'}
-              <span className="text-gray-500 text-lg font-normal"> / {stats ? formatSize(stats.maxStorage) : '...'}</span>
+              <span className="text-gray-400 dark:text-gray-500 text-lg font-normal"> / {stats ? formatSize(stats.maxStorage) : '...'}</span>
             </p>
-            <div className="w-full bg-[#232f48] rounded-full h-2">
+            <div className="w-full bg-gray-200 dark:bg-[#232f48] rounded-full h-2">
               <div
                 className="bg-primary h-2 rounded-full transition-all duration-500"
                 style={{ width: `${stats ? calculatePercentage(stats.usedStorage, stats.maxStorage) : 0}%` }}
@@ -143,15 +143,15 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Total Files Card */}
-          <div className="p-6 bg-[#1a2233] rounded-xl border border-[#232f48]">
-            <p className="text-gray-400 text-sm mb-1">Total Files</p>
-            <p className="text-2xl font-bold text-white">{stats ? stats.totalFiles : '...'}</p>
+          <div className="p-6 bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-[#232f48] transition-colors">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Total Files</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats ? stats.totalFiles : '...'}</p>
           </div>
 
           {/* Total Folders Card */}
-          <div className="p-6 bg-[#1a2233] rounded-xl border border-[#232f48]">
-            <p className="text-gray-400 text-sm mb-1">Total Folders</p>
-            <p className="text-2xl font-bold text-white">{stats ? stats.totalFolders : '...'}</p>
+          <div className="p-6 bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-[#232f48] transition-colors">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Total Folders</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats ? stats.totalFolders : '...'}</p>
           </div>
         </div>
 
@@ -159,16 +159,16 @@ const Dashboard: React.FC = () => {
         {/* Recent Access Section */}
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-white">Recent Access</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Access</h3>
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           </div>
-          <div className="bg-[#1a2233] rounded-xl border border-[#232f48] overflow-hidden">
+          <div className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-[#232f48] overflow-hidden transition-colors">
             {loading ? (
-              <div className="p-8 text-center text-gray-400">Loading files...</div>
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">Loading files...</div>
             ) : recentFiles.length > 0 ? (
               <FileTable viewMode={viewMode} files={recentFiles} onRefresh={loadData} />
             ) : (
-              <div className="p-8 text-center text-gray-400">No recent files found.</div>
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">No recent files found.</div>
             )}
           </div>
         </div>

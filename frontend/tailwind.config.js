@@ -9,8 +9,12 @@ export default {
     extend: {
       colors: {
         "primary": "#135bec",
-        "background-light": "#f6f6f8",
+        "background-light": "#ffffff",
         "background-dark": "#101622",
+        "card-light": "#ffffff",
+        "card-dark": "#1a2233",
+        "border-light": "#e5e7eb",
+        "border-dark": "#232f48",
       },
       fontFamily: {
         "display": ["Inter", "sans-serif"]

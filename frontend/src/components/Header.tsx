@@ -41,7 +41,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-4 bg-[#101622]/80 backdrop-blur-md border-b border-[#232f48]">
+    <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-4 bg-white/80 dark:bg-[#101622]/80 backdrop-blur-md border-b border-gray-200 dark:border-[#232f48] transition-colors">
       {/* Search Bar */}
       <div className="flex-1 max-w-xl">
         <div className="relative group">
@@ -50,7 +50,7 @@ const Header: React.FC = () => {
           </div>
           <input
             type="text"
-            className="block w-full p-2.5 pl-10 text-sm text-white bg-[#1a2233] border border-[#232f48] rounded-lg focus:ring-primary focus:border-primary placeholder-gray-500 transition-all"
+            className="block w-full p-2.5 pl-10 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-[#1a2233] border border-gray-200 dark:border-[#232f48] rounded-lg focus:ring-primary focus:border-primary placeholder-gray-400 dark:placeholder-gray-500 transition-all"
             placeholder="Search files and folders..."
           />
         </div>
@@ -58,11 +58,11 @@ const Header: React.FC = () => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-4 ml-4">
-        <button className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors relative">
+        <button className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors relative">
           <span className="material-symbols-outlined">notifications</span>
-          <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-[#101622]"></span>
+          <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#101622]"></span>
         </button>
-        <button className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+        <button className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors">
           <span className="material-symbols-outlined">help</span>
         </button>
 
@@ -77,10 +77,10 @@ const Header: React.FC = () => {
 
           {/* Dropdown Menu */}
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-[#1a2233] border border-[#232f48] rounded-xl shadow-lg overflow-hidden z-50">
-              <div className="p-3 border-b border-[#232f48]">
-                <p className="text-white font-semibold text-sm">{profile?.fullName || 'Loading...'}</p>
-                <p className="text-gray-400 text-xs">{profile?.email || ''}</p>
+            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#1a2233] border border-gray-200 dark:border-[#232f48] rounded-xl shadow-lg overflow-hidden z-50">
+              <div className="p-3 border-b border-gray-200 dark:border-[#232f48]">
+                <p className="text-gray-900 dark:text-white font-semibold text-sm">{profile?.fullName || 'Loading...'}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs">{profile?.email || ''}</p>
               </div>
               <div className="py-1">
                 <button
@@ -88,7 +88,7 @@ const Header: React.FC = () => {
                     setIsDropdownOpen(false);
                     navigate('/profile/edit');
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px]">edit</span>
                   Edit Profile
@@ -98,18 +98,18 @@ const Header: React.FC = () => {
                     setIsDropdownOpen(false);
                     navigate('/settings');
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px]">settings</span>
                   Settings
                 </button>
-                <div className="border-t border-[#232f48] my-1"></div>
+                <div className="border-t border-gray-200 dark:border-[#232f48] my-1"></div>
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
                     handleLogout();
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#232f48] hover:text-red-300 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-red-600 dark:hover:text-red-300 transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px]">logout</span>
                   Log Out

@@ -6,6 +6,7 @@ import { authService } from '../services/auth.service';
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -37,10 +38,10 @@ const Login: React.FC = () => {
           </div>
         )}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">Email / Username</label>
+          <label className="text-sm font-medium text-gray-700">Email</label>
           <input
             type="text"
-            className="w-full p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             placeholder="Enter your email or username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -48,26 +49,30 @@ const Login: React.FC = () => {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">Password</label>
+          <label className="text-sm font-medium text-gray-700">Password</label>
           <div className="relative">
             <input
-              type="password"
-              className="w-full p-3 bg-[#1a2233] border border-[#232f48] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              type={showPassword ? 'text' : 'password'}
+              className="w-full px-3 py-3 pr-11 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-              <span className="material-symbols-outlined text-[20px]">visibility_off</span>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <span className="material-symbols-outlined text-xl">{showPassword ? 'visibility' : 'visibility_off'}</span>
             </button>
           </div>
         </div>
 
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" className="size-4 rounded border-gray-600 bg-[#1a2233] text-primary focus:ring-primary/50" />
-            <span className="text-sm text-gray-400">Remember me</span>
+            <input type="checkbox" className="size-4 rounded border-gray-300 bg-gray-50 text-primary focus:ring-primary/50" />
+            <span className="text-sm text-gray-600">Remember me</span>
           </label>
           <a href="#" className="text-sm font-medium text-primary hover:text-primary/80">Forgot password?</a>
         </div>
@@ -83,7 +88,7 @@ const Login: React.FC = () => {
 
 
 
-      <p className="text-center text-sm text-gray-400 mt-4">
+      <p className="text-center text-sm text-gray-600 mt-4">
         Don't have an account? <Link to="/register" className="text-primary font-medium hover:underline">Register now</Link>
       </p>
     </AuthLayout>
