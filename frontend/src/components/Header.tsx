@@ -72,7 +72,7 @@ const Header: React.FC = () => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="cursor-pointer hover:scale-105 transition-transform"
           >
-            <AvatarPlaceholder size="sm" />
+            <AvatarPlaceholder size="sm" avatarUrl={profile?.avatar} />
           </div>
 
           {/* Dropdown Menu */}

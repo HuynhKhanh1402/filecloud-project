@@ -28,8 +28,19 @@ class UserService {
     return response.data;
   }
 
-  async updateProfile(data: { name?: string; avatar?: string }): Promise<UserProfile> {
+  async updateProfile(data: { fullName?: string; avatar?: string }): Promise<UserProfile> {
     const response = await api.patch('/users/profile', data);
+    return response.data;
+  }
+
+  async uploadAvatar(file: File): Promise<UserProfile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/users/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   }
 

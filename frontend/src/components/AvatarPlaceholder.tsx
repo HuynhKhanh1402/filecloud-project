@@ -2,9 +2,10 @@ import React from 'react';
 
 interface AvatarPlaceholderProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  avatarUrl?: string | null;
 }
 
-const AvatarPlaceholder: React.FC<AvatarPlaceholderProps> = ({ size = 'md' }) => {
+const AvatarPlaceholder: React.FC<AvatarPlaceholderProps> = ({ size = 'md', avatarUrl }) => {
   const sizeClasses = {
     sm: 'size-9',
     md: 'size-16',
@@ -21,8 +22,12 @@ const AvatarPlaceholder: React.FC<AvatarPlaceholderProps> = ({ size = 'md' }) =>
 
   return (
     <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-tr from-primary to-purple-500 p-[2px]`}>
-      <div className="size-full rounded-full bg-[#101622] flex items-center justify-center">
-        <span className={`material-symbols-outlined ${iconSizes[size]} text-gray-400`}>account_circle</span>
+      <div className="size-full rounded-full bg-[#101622] flex items-center justify-center overflow-hidden">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="Avatar" className="size-full object-cover" />
+        ) : (
+          <span className={`material-symbols-outlined ${iconSizes[size]} text-gray-400`}>account_circle</span>
+        )}
       </div>
     </div>
   );

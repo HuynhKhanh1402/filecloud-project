@@ -6,8 +6,19 @@ import {
   Delete,
   UseGuards,
   Request,
+  Post,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateUserDto, UserResponseDto, UserStatsDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,7 +32,11 @@ export class UsersController {
 
   @Get('profile')
   @ApiOperation({ summary: 'Get user profile' })
-  @ApiResponse({ status: 200, description: 'Return user profile', type: UserResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Return user profile',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProfile(@Request() req): Promise<UserResponseDto> {
     return this.usersService.findOne(req.user.id);
@@ -29,7 +44,11 @@ export class UsersController {
 
   @Patch('profile')
   @ApiOperation({ summary: 'Update user profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully', type: UserResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile updated successfully',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(
     @Request() req,
@@ -40,10 +59,40 @@ export class UsersController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get user statistics' })
-  @ApiResponse({ status: 200, description: 'Return user stats', type: UserStatsDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Return user stats',
+    type: UserStatsDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getStats(@Request() req): Promise<UserStatsDto> {
     return this.usersService.getStats(req.user.id);
+  }
+
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload user avatar' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Avatar uploaded successfully',
+    type: UserResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async uploadAvatar(
+    @Request() req,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    @UploadedFile() file: any,
+  ): Promise<UserResponseDto> {
+    return this.usersService.uploadAvatar(req.user.id, file);
   }
 
   @Delete('avatar')

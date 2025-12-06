@@ -9,9 +9,12 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import { Toaster } from 'react-hot-toast';
+
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" />
       <Routes>
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Dashboard />} />
