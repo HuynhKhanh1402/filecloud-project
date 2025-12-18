@@ -6,12 +6,15 @@ import ViewToggle from '../components/ViewToggle';
 import Modal from '../components/Modal';
 import { filesService, type FolderItem } from '../services/files.service';
 import type { FileItem } from '../services/dashboard.service';
+import { sharesService, type ShareResponse } from '../services/shares.service';
 import { formatDate } from '../utils/format';
+import toast from 'react-hot-toast';
 
 const MyFiles: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [files, setFiles] = useState<FileItem[]>([]);
   const [folders, setFolders] = useState<FolderItem[]>([]);
+  const [shares, setShares] = useState<ShareResponse[]>([]);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [breadcrumb, setBreadcrumb] = useState<FolderItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,12 +39,14 @@ const MyFiles: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [filesData, foldersData] = await Promise.all([
+      const [filesData, foldersData, sharesData] = await Promise.all([
         filesService.getFiles(currentFolderId || undefined),
         filesService.getFolders(currentFolderId || undefined),
+        sharesService.getMyShares(),
       ]);
       setFiles(filesData);
       setFolders(foldersData);
+      setShares(sharesData);
 
       // Load breadcrumb if we're in a folder
       if (currentFolderId) {
@@ -360,6 +365,100 @@ const MyFiles: React.FC = () => {
           </div>
         ) : (
           <>
+            {/* Shares Section */}
+            {shares.length > 0 && (
+              <div className="mt-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 px-4">Shares</h2>
+                <div className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-[#232f48] overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-gray-50 dark:bg-[#0f172a]">
+                        <tr>
+                          <th className="p-3 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">File</th>
+                          <th className="p-3 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider hidden sm:table-cell">Created</th>
+                          <th className="p-3 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">Status</th>
+                          <th className="p-3 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-[#232f48]">
+                        {shares.map((share) => (
+                          <tr key={share.id} className="hover:bg-gray-50 dark:hover:bg-[#0f172a] transition-colors">
+                            <td className="p-3">
+                              <div className="flex items-center gap-3">
+                                <span className="material-symbols-outlined text-[24px] text-primary">link</span>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[200px]">
+                                    {share.file?.name || 'Unknown file'}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                                    {new Date(share.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm text-gray-600 dark:text-gray-400 hidden sm:table-cell">
+                              {new Date(share.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="p-3 hidden md:table-cell">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                share.isActive 
+                                  ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' 
+                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                              }`}>
+                                {share.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="p-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      await navigator.clipboard.writeText(share.shareUrl);
+                                      toast.success('Link copied!');
+                                    } catch (err) {
+                                      toast.error('Failed to copy link');
+                                    }
+                                  }}
+                                  className="p-2 hover:bg-gray-100 dark:hover:bg-[#232f48] rounded-lg transition-colors text-gray-600 dark:text-gray-400"
+                                  title="Copy link"
+                                >
+                                  <span className="material-symbols-outlined text-[20px]">content_copy</span>
+                                </button>
+                                <button
+                                  onClick={() => window.open(share.shareUrl, '_blank')}
+                                  className="p-2 hover:bg-gray-100 dark:hover:bg-[#232f48] rounded-lg transition-colors text-gray-600 dark:text-gray-400"
+                                  title="Open link"
+                                >
+                                  <span className="material-symbols-outlined text-[20px]">open_in_new</span>
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    if (confirm('Are you sure you want to delete this share link?')) {
+                                      try {
+                                        await sharesService.deleteShare(share.id);
+                                        toast.success('Share deleted');
+                                        loadData();
+                                      } catch (err) {
+                                        toast.error('Failed to delete share');
+                                      }
+                                    }
+                                  }}
+                                  className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-red-600 dark:text-red-400"
+                                  title="Delete share"
+                                >
+                                  <span className="material-symbols-outlined text-[20px]">delete</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Folders Section */}
             {folders.length > 0 && (
               <div className="mt-4">
