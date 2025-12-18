@@ -244,22 +244,22 @@ const MyFiles: React.FC = () => {
         <div className="py-1">
           <button
             onClick={() => openRenameFolderModal(folder)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">edit</span>
             Rename
           </button>
           <button
             onClick={() => openMoveFolderModal(folder)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">drive_file_move</span>
             Move
           </button>
-          <div className="border-t border-[#232f48] my-1"></div>
+          <div className="border-t border-gray-200 dark:border-[#232f48] my-1"></div>
           <button
             onClick={() => openDeleteFolderModal(folder)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#232f48] hover:text-red-300 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-[#232f48] hover:text-red-700 dark:hover:text-red-300 transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">delete</span>
             Delete
@@ -507,7 +507,7 @@ const MyFiles: React.FC = () => {
         }
       >
         <div className="flex flex-col gap-4">
-          <label className="text-sm text-gray-400">Folder name</label>
+          <label className="text-sm text-gray-700 dark:text-gray-400">Folder name</label>
           <input
             type="text"
             value={newFolderName}
@@ -515,7 +515,7 @@ const MyFiles: React.FC = () => {
               setNewFolderName(e.target.value);
               setErrorMessage('');
             }}
-            className="w-full px-4 py-2 bg-[#0f172a] border border-[#232f48] rounded-lg text-white focus:outline-none focus:border-primary transition-colors"
+            className="w-full px-4 py-2 bg-gray-50 dark:bg-[#0f172a] border border-gray-300 dark:border-[#232f48] rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-primary dark:focus:border-primary transition-colors"
             placeholder="Enter folder name"
             autoFocus
             onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}

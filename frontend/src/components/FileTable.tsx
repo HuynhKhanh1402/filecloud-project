@@ -189,7 +189,7 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
     return (
       <div
         ref={menuRef}
-        className="fixed w-48 bg-[#1a2233] border border-[#232f48] rounded-xl shadow-lg z-[9999] overflow-hidden"
+        className="fixed w-48 bg-white dark:bg-[#1a2233] border border-gray-200 dark:border-[#232f48] rounded-xl shadow-lg z-[9999] overflow-hidden"
         style={{
           top: `${menuPosition.top}px`,
           left: `${menuPosition.left}px`
@@ -201,15 +201,15 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
             <>
               <button
                 onClick={() => handleRestore(file)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">restore_from_trash</span>
                 Restore
               </button>
-              <div className="border-t border-[#232f48] my-1"></div>
+              <div className="border-t border-gray-200 dark:border-[#232f48] my-1"></div>
               <button
                 onClick={() => openDeleteModal(file)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#232f48] hover:text-red-300 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-[#232f48] hover:text-red-700 dark:hover:text-red-300 transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">delete_forever</span>
                 Delete Permanently
@@ -219,36 +219,36 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
             <>
               <button
                 onClick={() => handleDownload(file)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">download</span>
                 Download
               </button>
               <button
                 onClick={() => openRenameModal(file)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">edit</span>
                 Rename
               </button>
               <button
                 onClick={() => openMoveModal(file)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">drive_file_move</span>
                 Move
               </button>
               <button 
                 onClick={() => openShareModal(file)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">share</span>
                 Share
               </button>
-              <div className="border-t border-[#232f48] my-1"></div>
+              <div className="border-t border-gray-200 dark:border-[#232f48] my-1"></div>
               <button
                 onClick={() => openDeleteModal(file)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-[#232f48] hover:text-red-300 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-[#232f48] hover:text-red-700 dark:hover:text-red-300 transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">delete</span>
                 Delete

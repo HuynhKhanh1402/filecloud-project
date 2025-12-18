@@ -59,6 +59,11 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, fileId, fileNa
     }
   };
 
+  const handleOpenLink = () => {
+    if (!share) return;
+    window.open(share.shareUrl, '_blank');
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -115,6 +120,13 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, fileId, fileNa
                     {copied ? 'check' : 'content_copy'}
                   </span>
                   {copied ? 'Copied' : 'Copy'}
+                </button>
+                <button
+                  onClick={handleOpenLink}
+                  className="px-4 py-2 bg-gray-100 dark:bg-[#232f48] hover:bg-gray-200 dark:hover:bg-[#2a3f5f] text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                  Open
                 </button>
               </div>
             </div>
