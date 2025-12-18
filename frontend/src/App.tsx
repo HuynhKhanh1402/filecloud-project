@@ -7,6 +7,7 @@ import Settings from './pages/Settings';
 import EditProfile from './pages/EditProfile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import SharedFile from './pages/SharedFile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import { Toaster } from 'react-hot-toast';
@@ -26,6 +27,7 @@ function App() {
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/shares/:token" element={<SharedFile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

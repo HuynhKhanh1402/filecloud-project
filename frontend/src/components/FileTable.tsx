@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { filesService, type FolderItem } from '../services/files.service';
 import type { FileItem } from '../services/dashboard.service';
 import Modal from './Modal';
+import ShareModal from './ShareModal';
 import { formatSize, formatDate } from '../utils/format';
 import FileIcon from './FileIcon';
 
@@ -23,6 +24,7 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [moveModalOpen, setMoveModalOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedFileForAction, setSelectedFileForAction] = useState<FileItem | null>(null);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
@@ -116,6 +118,13 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
   const openDeleteModal = (file: FileItem) => {
     setSelectedFileForAction(file);
     setDeleteModalOpen(true);
+    setActiveMenuId(null);
+    setMenuPosition(null);
+  };
+
+  const openShareModal = (file: FileItem) => {
+    setSelectedFileForAction(file);
+    setShareModalOpen(true);
     setActiveMenuId(null);
     setMenuPosition(null);
   };
@@ -229,7 +238,10 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
                 <span className="material-symbols-outlined text-[20px]">drive_file_move</span>
                 Move
               </button>
-              <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors">
+              <button 
+                onClick={() => openShareModal(file)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-[#232f48] hover:text-white transition-colors"
+              >
                 <span className="material-symbols-outlined text-[20px]">share</span>
                 Share
               </button>
@@ -503,6 +515,17 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
           )}
         </div>
       </Modal>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => {
+          setShareModalOpen(false);
+          setSelectedFileForAction(null);
+        }}
+        fileId={selectedFileForAction?.id || ''}
+        fileName={selectedFileForAction?.name || ''}
+      />
     </>
   );
 };

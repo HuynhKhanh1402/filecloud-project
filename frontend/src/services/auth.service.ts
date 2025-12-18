@@ -24,6 +24,8 @@ api.interceptors.request.use(
   }
 );
 
+export { api }; // Export api instance
+
 export const authService = {
   async login(credentials: any) {
     const response = await api.post('/auth/login', credentials);
