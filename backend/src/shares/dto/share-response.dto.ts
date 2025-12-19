@@ -35,7 +35,10 @@ export class ShareResponseDto {
   @ApiProperty({ description: 'Owner user ID' })
   ownerId: string;
 
-  @ApiProperty({ description: 'Shared with user ID (null for public links)', required: false })
+  @ApiProperty({
+    description: 'Shared with user ID (null for public links)',
+    required: false,
+  })
   sharedWithId?: string | null;
 
   @ApiProperty({ description: 'Unique share token' })
