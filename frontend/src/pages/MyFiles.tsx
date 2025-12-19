@@ -28,6 +28,8 @@ const MyFiles: React.FC = () => {
   const [renameFolderModalOpen, setRenameFolderModalOpen] = useState(false);
   const [deleteFolderModalOpen, setDeleteFolderModalOpen] = useState(false);
   const [moveFolderModalOpen, setMoveFolderModalOpen] = useState(false);
+  const [deleteShareModalOpen, setDeleteShareModalOpen] = useState(false);
+  const [selectedShareForDelete, setSelectedShareForDelete] = useState<ShareResponse | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedDestinationFolderId, setSelectedDestinationFolderId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -233,6 +235,24 @@ const MyFiles: React.FC = () => {
     }
   };
 
+  const handleDeleteShareSubmit = async () => {
+    if (!selectedShareForDelete) return;
+
+    setIsProcessing(true);
+    try {
+      await sharesService.deleteShare(selectedShareForDelete.id);
+      toast.success('Share link deleted successfully');
+      setDeleteShareModalOpen(false);
+      setSelectedShareForDelete(null);
+      await loadData();
+    } catch (error) {
+      console.error('Failed to delete share:', error);
+      toast.error('Failed to delete share link');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const renderFolderMenu = (folder: FolderItem) => {
     if (!folderMenuPosition) return null;
 
@@ -415,7 +435,7 @@ const MyFiles: React.FC = () => {
                                     try {
                                       await navigator.clipboard.writeText(share.shareUrl);
                                       toast.success('Link copied!');
-                                    } catch (err) {
+                                    } catch (_err) {
                                       toast.error('Failed to copy link');
                                     }
                                   }}
@@ -432,16 +452,9 @@ const MyFiles: React.FC = () => {
                                   <span className="material-symbols-outlined text-[20px]">open_in_new</span>
                                 </button>
                                 <button
-                                  onClick={async () => {
-                                    if (confirm('Are you sure you want to delete this share link?')) {
-                                      try {
-                                        await sharesService.deleteShare(share.id);
-                                        toast.success('Share deleted');
-                                        loadData();
-                                      } catch (err) {
-                                        toast.error('Failed to delete share');
-                                      }
-                                    }
+                                  onClick={() => {
+                                    setSelectedShareForDelete(share);
+                                    setDeleteShareModalOpen(true);
                                   }}
                                   className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-red-600 dark:text-red-400"
                                   title="Delete share"
@@ -788,6 +801,66 @@ const MyFiles: React.FC = () => {
               No other folders available in this location.
             </p>
           )}
+        </div>
+      </Modal>
+
+      {/* Delete Share Link Modal */}
+      <Modal
+        isOpen={deleteShareModalOpen}
+        onClose={() => {
+          setDeleteShareModalOpen(false);
+          setSelectedShareForDelete(null);
+        }}
+        title="Delete Share Link"
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setDeleteShareModalOpen(false);
+                setSelectedShareForDelete(null);
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#232f48] rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteShareSubmit}
+              disabled={isProcessing}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? 'Deleting...' : 'Delete'}
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-lg">
+            <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-[24px] mt-0.5">warning</span>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-900 dark:text-red-200 mb-1">
+                This action cannot be undone
+              </p>
+              <p className="text-sm text-red-700 dark:text-red-300">
+                Anyone with this link will no longer be able to access the file.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#0f172a] rounded-lg border border-gray-200 dark:border-[#232f48]">
+            <span className="material-symbols-outlined text-gray-600 dark:text-gray-400 text-[24px]">link</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {selectedShareForDelete?.file?.name || 'Unknown file'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Created on {selectedShareForDelete ? new Date(selectedShareForDelete.createdAt).toLocaleDateString() : ''}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Are you sure you want to delete this share link?
+          </p>
         </div>
       </Modal>
     </MainLayout>
