@@ -1,34 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MainLayout from '../layouts/MainLayout';
-import FileTable from '../components/FileTable';
+import FileIcon from '../components/FileIcon';
 import { sharesService } from '../services/shares.service';
 import { ShareNotificationModal } from '../components/ShareNotificationModal';
+import { formatSize, formatDate } from '../utils/format';
 import toast from 'react-hot-toast';
 
 type TabType = 'accepted' | 'pending';
 
 const Shared: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('accepted');
-  const [acceptedFiles, setAcceptedFiles] = useState<any[]>([]);
+  const [acceptedShares, setAcceptedShares] = useState<any[]>([]);
   const [pendingShares, setPendingShares] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedShare, setSelectedShare] = useState<any>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadShares();
   }, [activeTab]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveMenuId(null);
+        setMenuPosition(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadShares = async () => {
     try {
       setLoading(true);
       if (activeTab === 'accepted') {
         const shares = await sharesService.getReceivedShares();
-        const sharedFiles = shares.map((share: any) => ({
-          ...share.file,
-          sharedBy: share.owner,
-          shareId: share.id,
-        }));
-        setAcceptedFiles(sharedFiles);
+        setAcceptedShares(shares);
       } else {
         const shares = await sharesService.getPendingShares();
         setPendingShares(shares);
@@ -44,6 +55,47 @@ const Shared: React.FC = () => {
   const handleShareAction = () => {
     setSelectedShare(null);
     loadShares();
+  };
+
+  const handleMenuClick = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (activeMenuId === id) {
+      setActiveMenuId(null);
+      setMenuPosition(null);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const menuWidth = 192;
+      const menuHeight = 60;
+
+      let top = rect.bottom + 2;
+      let left = rect.right - menuWidth;
+
+      if (top + menuHeight > window.innerHeight) {
+        top = rect.top - menuHeight - 2;
+      }
+
+      if (left < 8) {
+        left = 8;
+      }
+
+      if (left + menuWidth > window.innerWidth - 8) {
+        left = window.innerWidth - menuWidth - 8;
+      }
+
+      setActiveMenuId(id);
+      setMenuPosition({ top, left });
+    }
+  };
+
+  const handleDownload = async (share: any) => {
+    try {
+      await sharesService.downloadSharedFile(share.id, share.file.name);
+      toast.success('Download started');
+      setActiveMenuId(null);
+      setMenuPosition(null);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Download failed');
+    }
   };
 
   return (
@@ -88,7 +140,75 @@ const Shared: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : activeTab === 'accepted' ? (
-          <FileTable viewMode="list" files={acceptedFiles} />
+          <>
+            {acceptedShares.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400">No accepted shared files</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 dark:bg-[#0f172a] border-b border-gray-200 dark:border-[#232f48]">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Shared By</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Size</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-[#1a2233] divide-y divide-gray-200 dark:divide-[#232f48]">
+                    {acceptedShares.map((share: any) => (
+                      <tr key={share.id} className="hover:bg-gray-50 dark:hover:bg-[#0f172a] transition-colors group">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <FileIcon fileName={share.file.name} mimeType={share.file.mimeType} />
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{share.file.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                          <div>
+                            <div className="font-medium">{share.owner?.fullName || 'Unknown'}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{share.owner?.email}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{formatSize(share.file.size)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{formatDate(share.createdAt)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm relative">
+                          <button
+                            onClick={(e) => handleMenuClick(e, share.id)}
+                            className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#2d3a54] text-gray-500 dark:text-[#92a4c9] transition-colors ${activeMenuId === share.id ? 'bg-gray-200 dark:bg-[#2d3a54]' : ''}`}
+                          >
+                            <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Context Menu */}
+            {activeMenuId && menuPosition && (
+              <div
+                ref={menuRef}
+                className="fixed w-48 bg-white dark:bg-[#1a2233] border border-gray-200 dark:border-[#232f48] rounded-xl shadow-lg z-[9999] overflow-hidden"
+                style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
+              >
+                <button
+                  onClick={() => {
+                    const share = acceptedShares.find(s => s.id === activeMenuId);
+                    if (share) handleDownload(share);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#232f48] hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[20px]">download</span>
+                  Download
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pendingShares.length === 0 ? (

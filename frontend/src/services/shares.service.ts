@@ -55,4 +55,17 @@ export const sharesService = {
     const response = await api.get('/shares/received/pending');
     return response.data;
   },
+
+  downloadSharedFile: async (shareId: string, fileName: string): Promise<void> => {
+    const response = await api.get(`/shares/file/${shareId}/download`);
+    const downloadUrl = response.data.url;
+    
+    // Download the file
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  },
 };

@@ -407,6 +407,31 @@ export class SharesService {
     return url;
   }
 
+  async getSharedFileDownloadUrl(
+    userId: string,
+    shareId: string,
+  ): Promise<string> {
+    const share = await this.prisma.share.findUnique({
+      where: { id: shareId },
+      include: {
+        file: true,
+      },
+    });
+
+    if (!share) {
+      throw new NotFoundException('Share not found');
+    }
+
+    // Check if user is the recipient and share is accepted
+    if (share.sharedWithId !== userId || share.status !== 'accepted') {
+      throw new ForbiddenException('You do not have access to this file');
+    }
+
+    // Generate presigned URL for download
+    const url = await this.minio.getPresignedUrl(share.file.storagePath);
+    return url;
+  }
+
   private mapToResponseDto(share: {
     id: string;
     fileId: string;

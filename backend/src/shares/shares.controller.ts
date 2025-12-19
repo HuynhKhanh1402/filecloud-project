@@ -175,4 +175,27 @@ export class SharesController {
       return { message: 'Share rejected' };
     }
   }
+
+  @Get('file/:shareId/download')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get download URL for received shared file' })
+  @ApiParam({ name: 'shareId', description: 'Share ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Download URL',
+    schema: { properties: { url: { type: 'string' } } },
+  })
+  @ApiResponse({ status: 404, description: 'Share not found' })
+  @ApiResponse({ status: 403, description: 'Permission denied' })
+  async getSharedFileDownloadUrl(
+    @Req() req: { user: { id: string } },
+    @Param('shareId') shareId: string,
+  ) {
+    const url = await this.sharesService.getSharedFileDownloadUrl(
+      req.user.id,
+      shareId,
+    );
+    return { url };
+  }
 }
