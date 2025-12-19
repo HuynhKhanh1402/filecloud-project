@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Delete,
+  Patch,
   Param,
   Body,
   UseGuards,
@@ -16,7 +17,12 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { SharesService } from './shares.service';
-import { CreateShareDto, ShareResponseDto } from './dto';
+import {
+  CreateShareDto,
+  CreateDirectShareDto,
+  ShareActionDto,
+  ShareResponseDto,
+} from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('shares')
@@ -96,5 +102,77 @@ export class SharesController {
   ) {
     await this.sharesService.deleteShare(req.user.id, id);
     return { message: 'Share deleted successfully' };
+  }
+
+  @Post('direct')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Share a file directly with another user' })
+  @ApiResponse({
+    status: 201,
+    description: 'File shared successfully',
+    type: ShareResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'File or user not found' })
+  @ApiResponse({ status: 403, description: 'Permission denied' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async createDirectShare(
+    @Req() req: { user: { id: string } },
+    @Body() createDirectShareDto: CreateDirectShareDto,
+  ) {
+    return this.sharesService.createDirectShare(
+      req.user.id,
+      createDirectShareDto,
+    );
+  }
+
+  @Get('received/all')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get all files shared with current user (accepted)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of received shares',
+    type: [ShareResponseDto],
+  })
+  async getReceivedShares(@Req() req: { user: { id: string } }) {
+    return this.sharesService.getReceivedShares(req.user.id);
+  }
+
+  @Get('received/pending')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get pending share requests' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of pending shares',
+    type: [ShareResponseDto],
+  })
+  async getPendingShares(@Req() req: { user: { id: string } }) {
+    return this.sharesService.getPendingShares(req.user.id);
+  }
+
+  @Patch(':id/action')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Accept or reject a share request' })
+  @ApiParam({ name: 'id', description: 'Share ID' })
+  @ApiResponse({ status: 200, description: 'Share action completed' })
+  @ApiResponse({ status: 404, description: 'Share not found' })
+  @ApiResponse({ status: 403, description: 'Permission denied' })
+  async handleShareAction(
+    @Req() req: { user: { id: string } },
+    @Param('id') id: string,
+    @Body() shareActionDto: ShareActionDto,
+  ) {
+    if (shareActionDto.action === 'accept') {
+      const share = await this.sharesService.acceptShare(req.user.id, id);
+      return { message: 'Share accepted', share };
+    } else {
+      await this.sharesService.rejectShare(req.user.id, id);
+      return { message: 'Share rejected' };
+    }
   }
 }

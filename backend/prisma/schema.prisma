@@ -21,9 +21,10 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  files   File[]
-  folders Folder[]
-  shares  Share[]
+  files          File[]
+  folders        Folder[]
+  sharesOwned    Share[]  @relation("SharesOwned")
+  sharesReceived Share[]  @relation("SharesReceived")
 
   @@map("users")
 }
@@ -66,15 +67,19 @@ model File {
 }
 
 model Share {
-  id        String   @id @default(uuid())
-  fileId    String
-  ownerId   String
-  token     String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  fileId       String
+  ownerId      String
+  sharedWithId String?  // null = public link, non-null = direct share to user
+  token        String   @unique
+  isActive     Boolean  @default(true)
+  status       String   @default("accepted") // "pending" | "accepted" | "rejected"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  file  File @relation(fields: [fileId], references: [id], onDelete: Cascade)
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  file       File  @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  owner      User  @relation("SharesOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+  sharedWith User? @relation("SharesReceived", fields: [sharedWithId], references: [id], onDelete: Cascade)
 
   @@map("shares")
 }

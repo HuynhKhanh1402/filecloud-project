@@ -40,4 +40,19 @@ export const sharesService = {
   deleteShare: async (shareId: string): Promise<void> => {
     await api.delete(`/shares/${shareId}`);
   },
+
+  createDirectShare: async (fileId: string, email: string): Promise<ShareResponse> => {
+    const response = await api.post('/shares/direct', { fileId, email });
+    return response.data;
+  },
+
+  getReceivedShares: async (): Promise<ShareResponse[]> => {
+    const response = await api.get('/shares/received/all');
+    return response.data;
+  },
+
+  getPendingShares: async (): Promise<ShareResponse[]> => {
+    const response = await api.get('/shares/received/pending');
+    return response.data;
+  },
 };

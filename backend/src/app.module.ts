@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { FilesModule } from './files/files.module';
 import { FoldersModule } from './folders/folders.module';
 import { SharesModule } from './shares/shares.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SharesModule } from './shares/shares.module';
     FilesModule,
     FoldersModule,
     SharesModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

@@ -9,12 +9,16 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import SharedFile from './pages/SharedFile';
 import ProtectedRoute from './components/ProtectedRoute';
+import { WebSocketProvider, useWebSocket } from './contexts/WebSocketContext';
+import { ShareNotificationModal } from './components/ShareNotificationModal';
 
 import { Toaster } from 'react-hot-toast';
 
-function App() {
+function AppContent() {
+  const { pendingNotification, clearNotification } = useWebSocket();
+
   return (
-    <Router>
+    <>
       <Toaster position="top-right" />
       <Routes>
         <Route element={<ProtectedRoute />}>
@@ -30,6 +34,31 @@ function App() {
         <Route path="/shares/:token" element={<SharedFile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* Share Notification Modal */}
+      {pendingNotification && (
+        <ShareNotificationModal
+          shareId={pendingNotification.shareId}
+          fileName={pendingNotification.fileName}
+          ownerName={pendingNotification.ownerName}
+          ownerEmail={pendingNotification.ownerEmail}
+          onClose={clearNotification}
+          onAction={() => {
+            // Optionally refresh shares list or navigate to shared page
+            window.location.reload();
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <WebSocketProvider>
+        <AppContent />
+      </WebSocketProvider>
     </Router>
   );
 }
