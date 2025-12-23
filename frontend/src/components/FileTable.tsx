@@ -410,7 +410,7 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
           <>
             <button
               onClick={() => setDeleteModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#232f48] rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -424,14 +424,14 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
           </>
         }
       >
-        <p className="text-gray-300">
+        <p className="text-gray-700 dark:text-gray-300">
           {isTrash
-            ? <>Are you sure you want to <span className="font-bold text-red-500">permanently delete</span> <span className="font-semibold text-white">"{selectedFileForAction?.name}"</span>? This action cannot be undone.</>
-            : <>Are you sure you want to move <span className="font-semibold text-white">"{selectedFileForAction?.name}"</span> to trash?</>
+            ? <>Are you sure you want to <span className="font-bold text-red-500">permanently delete</span> <span className="font-semibold text-gray-900 dark:text-white">"{selectedFileForAction?.name}"</span>? This action cannot be undone.</>
+            : <>Are you sure you want to move <span className="font-semibold text-gray-900 dark:text-white">"{selectedFileForAction?.name}"</span> to trash?</>
           }
         </p>
         {!isTrash && (
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-gray-600 dark:text-gray-500 mt-2">
             You can restore it later from the Trash folder.
           </p>
         )}

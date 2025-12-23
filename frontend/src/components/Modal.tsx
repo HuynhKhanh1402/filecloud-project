@@ -49,7 +49,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer 
           </button>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 text-gray-700 dark:text-gray-300">
           {children}
         </div>
 

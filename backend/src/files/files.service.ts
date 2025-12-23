@@ -13,7 +13,7 @@ export class FilesService {
   constructor(
     private prisma: PrismaService,
     private minioService: MinioService,
-  ) { }
+  ) {}
 
   async uploadFile(
     userId: string,
@@ -29,6 +29,24 @@ export class FilesService {
       if (!folder) {
         throw new NotFoundException('Folder not found');
       }
+    }
+
+    // Check storage quota (10 GB limit)
+    const maxStorage = 10 * 1024 * 1024 * 1024; // 10 GB in bytes
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { usedStorage: true },
+    });
+
+    if (user.usedStorage + file.size > maxStorage) {
+      const usedGb = (user.usedStorage / (1024 * 1024 * 1024)).toFixed(2);
+      const remainingGb = (
+        (maxStorage - user.usedStorage) /
+        (1024 * 1024 * 1024)
+      ).toFixed(2);
+      throw new BadRequestException(
+        `Storage quota exceeded. Used: ${usedGb}GB / 10GB. Remaining: ${remainingGb}GB`,
+      );
     }
 
     // Generate unique storage path
