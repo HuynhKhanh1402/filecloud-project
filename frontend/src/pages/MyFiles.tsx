@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import FileTable from '../components/FileTable';
-import FilterBar from '../components/FilterBar';
+import FilterBar, { type FileType } from '../components/FilterBar';
 import ViewToggle from '../components/ViewToggle';
 import Modal from '../components/Modal';
 import { filesService, type FolderItem } from '../services/files.service';
@@ -22,6 +22,10 @@ const MyFiles: React.FC = () => {
   const [selectedFolderForAction, setSelectedFolderForAction] = useState<FolderItem | null>(null);
   const [activeFolderMenuId, setActiveFolderMenuId] = useState<string | null>(null);
   const [folderMenuPosition, setFolderMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  
+  // Search and Filter
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<FileType>('all');
 
   // Modals
   const [createFolderModalOpen, setCreateFolderModalOpen] = useState(false);
@@ -253,6 +257,46 @@ const MyFiles: React.FC = () => {
     }
   };
 
+  // Filter and search logic
+  const getFileTypeCategory = (mimeType: string): FileType => {
+    if (mimeType.startsWith('image/')) return 'images';
+    if (mimeType.startsWith('video/')) return 'videos';
+    if (mimeType.startsWith('audio/')) return 'audio';
+    if (
+      mimeType.includes('document') ||
+      mimeType.includes('pdf') ||
+      mimeType.includes('text') ||
+      mimeType.includes('word') ||
+      mimeType.includes('excel') ||
+      mimeType.includes('powerpoint') ||
+      mimeType.includes('spreadsheet') ||
+      mimeType.includes('presentation')
+    ) {
+      return 'docs';
+    }
+    return 'all';
+  };
+
+  const filteredFiles = useMemo(() => {
+    let result = files;
+
+    // Apply type filter
+    if (activeFilter !== 'all') {
+      result = result.filter(file => getFileTypeCategory(file.mimeType) === activeFilter);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(file => file.name.toLowerCase().includes(query));
+    }
+
+    return result;
+  }, [files, activeFilter, searchQuery]);
+
+  // Folders are not affected by search/filter
+  const filteredFolders = folders;
+
   const renderFolderMenu = (folder: FolderItem) => {
     if (!folderMenuPosition) return null;
 
@@ -377,7 +421,13 @@ const MyFiles: React.FC = () => {
           </div>
         )}
 
-        <FilterBar viewToggle={<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />} />
+        <FilterBar 
+          viewToggle={<ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />} 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -477,78 +527,78 @@ const MyFiles: React.FC = () => {
               <div className="mt-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 px-4">Folders</h2>
                 {viewMode === 'grid' ? (
-                  <div className="px-4 py-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {folders.map((folder) => (
-                        <div
-                          key={folder.id}
-                          onClick={() => handleFolderClick(folder.id)}
-                          className="group relative p-4 rounded-xl border cursor-pointer transition-all duration-200 bg-white dark:bg-[#1a2233] border-gray-200 dark:border-[#232f48] hover:border-primary/50 flex flex-col items-center gap-3 text-center"
-                        >
-                          <span className="material-symbols-outlined text-[48px] text-primary">folder</span>
-                          <div className="w-full">
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{folder.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-[#92a4c9] mt-1">{formatDate(folder.createdAt)}</p>
+                    <div className="px-4 py-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {filteredFolders.map((folder) => (
+                          <div
+                            key={folder.id}
+                            onClick={() => handleFolderClick(folder.id)}
+                            className="group relative p-4 rounded-xl border cursor-pointer transition-all duration-200 bg-white dark:bg-[#1a2233] border-gray-200 dark:border-[#232f48] hover:border-primary/50 flex flex-col items-center gap-3 text-center"
+                          >
+                            <span className="material-symbols-outlined text-[48px] text-primary">folder</span>
+                            <div className="w-full">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{folder.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-[#92a4c9] mt-1">{formatDate(folder.createdAt)}</p>
+                            </div>
+                            <div className="absolute top-2 right-2">
+                              <button
+                                onClick={(e) => handleFolderMenuClick(e, folder)}
+                                className={`p-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#2d3a54] text-gray-400 transition-opacity ${activeFolderMenuId === folder.id ? 'opacity-100 bg-gray-100 dark:bg-[#2d3a54]' : 'opacity-0 group-hover:opacity-100'}`}
+                              >
+                                <span className="material-symbols-outlined text-lg">more_vert</span>
+                              </button>
+                            </div>
                           </div>
-                          <div className="absolute top-2 right-2">
-                            <button
-                              onClick={(e) => handleFolderMenuClick(e, folder)}
-                              className={`p-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#2d3a54] text-gray-400 transition-opacity ${activeFolderMenuId === folder.id ? 'opacity-100 bg-gray-100 dark:bg-[#2d3a54]' : 'opacity-0 group-hover:opacity-100'}`}
-                            >
-                              <span className="material-symbols-outlined text-lg">more_vert</span>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="px-4 py-3">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <tbody className="divide-y divide-gray-200 dark:divide-[#232f48]">
-                          {folders.map((folder) => (
-                            <tr
-                              key={folder.id}
-                              onClick={() => handleFolderClick(folder.id)}
-                              className="cursor-pointer transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-[#1a2233]"
-                            >
-                              <td className="p-3">
-                                <div className="flex items-center gap-3">
-                                  <span className="material-symbols-outlined text-[32px] text-primary">folder</span>
-                                  <div>
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{folder.name}</p>
-                                    <p className="text-xs text-gray-500 dark:text-[#92a4c9] md:hidden">{formatDate(folder.createdAt)}</p>
+                  ) : (
+                    <div className="px-4 py-3">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <tbody className="divide-y divide-gray-200 dark:divide-[#232f48]">
+                            {filteredFolders.map((folder) => (
+                              <tr
+                                key={folder.id}
+                                onClick={() => handleFolderClick(folder.id)}
+                                className="cursor-pointer transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-[#1a2233]"
+                              >
+                                <td className="p-3">
+                                  <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-[32px] text-primary">folder</span>
+                                    <div>
+                                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{folder.name}</p>
+                                      <p className="text-xs text-gray-500 dark:text-[#92a4c9] md:hidden">{formatDate(folder.createdAt)}</p>
+                                    </div>
                                   </div>
-                                </div>
-                              </td>
-                              <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden md:table-cell">{formatDate(folder.createdAt)}</td>
-                              <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden sm:table-cell">—</td>
-                              <td className="p-3 text-right relative">
-                                <button
-                                  onClick={(e) => handleFolderMenuClick(e, folder)}
-                                  className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#2d3a54] text-gray-500 dark:text-[#92a4c9] transition-colors ${activeFolderMenuId === folder.id ? 'bg-gray-200 dark:bg-[#2d3a54]' : ''}`}
-                                >
-                                  <span className="material-symbols-outlined text-lg">more_horiz</span>
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                                </td>
+                                <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden md:table-cell">{formatDate(folder.createdAt)}</td>
+                                <td className="p-3 text-sm text-gray-500 dark:text-[#92a4c9] hidden sm:table-cell">—</td>
+                                <td className="p-3 text-right relative">
+                                  <button
+                                    onClick={(e) => handleFolderMenuClick(e, folder)}
+                                    className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#2d3a54] text-gray-500 dark:text-[#92a4c9] transition-colors ${activeFolderMenuId === folder.id ? 'bg-gray-200 dark:bg-[#2d3a54]' : ''}`}
+                                  >
+                                    <span className="material-symbols-outlined text-lg">more_horiz</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             )}
 
             {/* Files Section */}
-            {files.length > 0 && (
+            {filteredFiles.length > 0 && (
               <div className="mt-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 px-4">Files</h2>
                 <FileTable 
                   viewMode={viewMode} 
-                  files={files} 
+                  files={filteredFiles} 
                   onRefresh={loadData}
                   folders={folders}
                   currentFolderId={currentFolderId}
@@ -557,12 +607,22 @@ const MyFiles: React.FC = () => {
             )}
 
             {/* Empty State */}
-            {folders.length === 0 && files.length === 0 && (
+            {folders.length === 0 && filteredFiles.length === 0 && shares.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <span className="material-symbols-outlined text-[80px] text-gray-300 dark:text-[#232f48] mb-4">folder_open</span>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No files or folders</h3>
-                <p className="text-gray-500 dark:text-[#92a4c9] mb-6">Upload your first file or create a folder to get started</p>
-                <div className="flex gap-3">
+                <span className="material-symbols-outlined text-[80px] text-gray-300 dark:text-[#232f48] mb-4">
+                  {searchQuery || activeFilter !== 'all' ? 'search_off' : 'folder_open'}
+                </span>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  {searchQuery || activeFilter !== 'all' ? 'No files found' : 'No files or folders'}
+                </h3>
+                <p className="text-gray-500 dark:text-[#92a4c9] mb-6">
+                  {searchQuery || activeFilter !== 'all' 
+                    ? 'Try adjusting your search or filter criteria'
+                    : 'Upload your first file or create a folder to get started'
+                  }
+                </p>
+                {!searchQuery && activeFilter === 'all' && (
+                  <div className="flex gap-3">
                   <button
                     onClick={() => setCreateFolderModalOpen(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1a2233] hover:bg-gray-50 dark:hover:bg-[#232f48] text-gray-900 dark:text-white text-sm font-medium rounded-lg transition-colors border border-gray-200 dark:border-[#232f48]"
@@ -578,6 +638,7 @@ const MyFiles: React.FC = () => {
                     Upload File
                   </button>
                 </div>
+                )}
               </div>
             )}
           </>

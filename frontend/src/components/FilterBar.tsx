@@ -1,13 +1,23 @@
 import React from 'react';
 
+export type FileType = 'all' | 'docs' | 'images' | 'videos' | 'audio';
+
 interface FilterBarProps {
   viewToggle?: React.ReactNode;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  activeFilter: FileType;
+  onFilterChange: (filter: FileType) => void;
 }
 
-const FilterBar: React.FC<FilterBarProps> = ({ viewToggle }) => {
-  const [activeFilter, setActiveFilter] = React.useState('all');
-
-  const filters = [
+const FilterBar: React.FC<FilterBarProps> = ({ 
+  viewToggle, 
+  searchQuery, 
+  onSearchChange, 
+  activeFilter, 
+  onFilterChange 
+}) => {
+  const filters: { id: FileType; label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'docs', label: 'Documents' },
     { id: 'images', label: 'Images' },
@@ -23,9 +33,11 @@ const FilterBar: React.FC<FilterBarProps> = ({ viewToggle }) => {
             <span className="material-symbols-outlined">search</span>
           </div>
           <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
             className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 dark:border-[#232f48] bg-white dark:bg-[#232f48] h-full placeholder:text-gray-400 dark:placeholder:text-[#92a4c9] px-4 text-base font-normal leading-normal"
             placeholder="Search files by name..."
-            defaultValue=""
           />
         </div>
       </label>
@@ -34,7 +46,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ viewToggle }) => {
           {filters.map((filter) => (
             <button
               key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
+              onClick={() => onFilterChange(filter.id)}
               className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg px-3 transition-colors ${activeFilter === filter.id
                 ? 'bg-primary/20 text-primary dark:bg-primary/30 dark:text-white'
                 : 'bg-gray-100 dark:bg-[#232f48] text-gray-600 dark:text-white/80 hover:bg-gray-200 dark:hover:bg-[#2d3a54]'

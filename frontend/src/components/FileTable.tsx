@@ -467,7 +467,7 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
         }
       >
         <div className="flex flex-col gap-4">
-          <label className="text-sm text-gray-400">Select destination folder</label>
+          <label className="text-sm text-gray-700 dark:text-gray-400">Select destination folder</label>
           
           {/* Root folder option - only show if not already in root */}
           {currentFolderId && (
@@ -475,11 +475,11 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
               onClick={() => setSelectedFolderId(null)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${
                 selectedFolderId === null
-                  ? 'bg-primary/20 border-primary text-white'
-                  : 'bg-[#0f172a] border-[#232f48] text-gray-300 hover:border-primary/50'
+                  ? 'bg-primary/20 dark:bg-primary/20 border-primary text-primary dark:text-white font-semibold'
+                  : 'bg-gray-50 dark:bg-[#0f172a] border-gray-200 dark:border-[#232f48] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#0f172a]/80'
               }`}
             >
-              <span className="material-symbols-outlined text-[24px]">home</span>
+              <span className={`material-symbols-outlined text-[24px] ${selectedFolderId === null ? 'text-primary' : 'text-gray-700 dark:text-primary'}`}>home</span>
               <span className="font-medium">Root (My Files)</span>
             </button>
           )}
@@ -492,8 +492,8 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
                 onClick={() => setSelectedFolderId(folder.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${
                   selectedFolderId === folder.id
-                    ? 'bg-primary/20 border-primary text-white'
-                    : 'bg-[#0f172a] border-[#232f48] text-gray-300 hover:border-primary/50'
+                    ? 'bg-primary/20 dark:bg-primary/20 border-primary text-primary dark:text-white font-semibold'
+                    : 'bg-gray-50 dark:bg-[#0f172a] border-gray-200 dark:border-[#232f48] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#0f172a]/80'
                 }`}
               >
                 <span className="material-symbols-outlined text-[24px] text-primary">folder</span>
@@ -503,13 +503,13 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
           </div>
 
           {folders.length === 0 && !currentFolderId && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-gray-600 dark:text-gray-500 text-center py-4">
               No folders available. Create a new folder first.
             </p>
           )}
           
           {folders.length === 0 && currentFolderId && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-gray-600 dark:text-gray-500 text-center py-4">
               No other folders available in this location.
             </p>
           )}
