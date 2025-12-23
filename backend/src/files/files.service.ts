@@ -54,7 +54,9 @@ export class FilesService {
     const storagePath = `${userId}/${randomUUID()}.${fileExt}`;
 
     // Decode filename properly (fix Vietnamese/UTF-8 encoding issues)
-    const decodedFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    const decodedFileName = Buffer.from(file.originalname, 'latin1').toString(
+      'utf8',
+    );
 
     // Upload to MinIO
     await this.minioService.uploadFile(storagePath, file.buffer, {

@@ -14,6 +14,11 @@ export interface ShareResponse {
     size: number;
     mimeType: string;
   };
+  owner?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
 }
 
 export const sharesService = {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import FileIcon from '../components/FileIcon';
-import { sharesService } from '../services/shares.service';
+import { sharesService, type ShareResponse } from '../services/shares.service';
 import { ShareNotificationModal } from '../components/ShareNotificationModal';
 import { formatSize, formatDate } from '../utils/format';
 import toast from 'react-hot-toast';
@@ -10,10 +10,10 @@ type TabType = 'accepted' | 'pending';
 
 const Shared: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('accepted');
-  const [acceptedShares, setAcceptedShares] = useState<any[]>([]);
-  const [pendingShares, setPendingShares] = useState<any[]>([]);
+  const [acceptedShares, setAcceptedShares] = useState<ShareResponse[]>([]);
+  const [pendingShares, setPendingShares] = useState<ShareResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedShare, setSelectedShare] = useState<any>(null);
+  const [selectedShare, setSelectedShare] = useState<ShareResponse | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -87,14 +87,16 @@ const Shared: React.FC = () => {
     }
   };
 
-  const handleDownload = async (share: any) => {
+  const handleDownload = async (share: ShareResponse) => {
     try {
+      if (!share.file) return;
       await sharesService.downloadSharedFile(share.id, share.file.name);
       toast.success('Download started');
       setActiveMenuId(null);
       setMenuPosition(null);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Download failed');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || 'Download failed');
     }
   };
 
@@ -158,12 +160,12 @@ const Shared: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-[#1a2233] divide-y divide-gray-200 dark:divide-[#232f48]">
-                    {acceptedShares.map((share: any) => (
+                    {acceptedShares.map((share) => (
                       <tr key={share.id} className="hover:bg-gray-50 dark:hover:bg-[#0f172a] transition-colors group">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
-                            <FileIcon fileName={share.file.name} mimeType={share.file.mimeType} />
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">{share.file.name}</span>
+                            <FileIcon mimeType={share.file?.mimeType || ''} />
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">{share.file?.name}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
@@ -172,7 +174,7 @@ const Shared: React.FC = () => {
                             <div className="text-xs text-gray-500 dark:text-gray-400">{share.owner?.email}</div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{formatSize(share.file.size)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{formatSize(share.file?.size || 0)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{formatDate(share.createdAt)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm relative">
                           <button
@@ -216,7 +218,7 @@ const Shared: React.FC = () => {
                 <p className="text-gray-500 dark:text-gray-400">No pending share requests</p>
               </div>
             ) : (
-              pendingShares.map((share: any) => (
+              pendingShares.map((share) => (
                 <div
                   key={share.id}
                   className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
@@ -228,13 +230,13 @@ const Shared: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {share.file.name}
+                        {share.file?.name}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        From: {share.owner.fullName}
+                        From: {share.owner?.fullName}
                       </p>
                       <p className="text-xs text-gray-400 dark:text-gray-500">
-                        {share.owner.email}
+                        {share.owner?.email}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
                         <span className="px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30 rounded">
@@ -257,9 +259,9 @@ const Shared: React.FC = () => {
       {selectedShare && (
         <ShareNotificationModal
           shareId={selectedShare.id}
-          fileName={selectedShare.file.name}
-          ownerName={selectedShare.owner.fullName}
-          ownerEmail={selectedShare.owner.email}
+          fileName={selectedShare.file?.name || ''}
+          ownerName={selectedShare.owner?.fullName || ''}
+          ownerEmail={selectedShare.owner?.email || ''}
           onClose={() => setSelectedShare(null)}
           onAction={handleShareAction}
         />
