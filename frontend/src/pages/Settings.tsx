@@ -86,9 +86,9 @@ const Settings: React.FC = () => {
                   <div className="bg-primary h-2 rounded-full" style={{ width: `${storagePercentage}%` }}></div>
                 </div>
               </div>
-              <button className="w-fit px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors">
+              {/* <button className="w-fit px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors">
                 Upgrade Storage
-              </button>
+              </button> */}
             </div>
           </div>
 

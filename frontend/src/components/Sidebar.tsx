@@ -71,20 +71,17 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* Storage Widget */}
-      <div className="p-4 m-3 bg-gray-50 dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-[#232f48] transition-colors">
+      <div className="p-4 m-3 mb-8 bg-gradient-to-br from-blue-50 to-white dark:bg-[#1a2233] rounded-xl border border-blue-100 dark:border-[#232f48] shadow-sm dark:shadow-none transition-colors">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-semibold text-gray-900 dark:text-white">Storage</span>
-          <span className="text-xs text-primary">{storagePercentage}%</span>
+          <span className="text-xs font-semibold text-primary">{storagePercentage}%</span>
         </div>
-        <div className="w-full bg-gray-200 dark:bg-[#232f48] rounded-full h-1.5 mb-2">
-          <div className="bg-primary h-1.5 rounded-full" style={{ width: `${storagePercentage}%` }}></div>
+        <div className="w-full bg-gray-200 dark:bg-[#232f48] rounded-full h-2 mb-2 overflow-hidden">
+          <div className="bg-gradient-to-r from-primary to-blue-500 h-2 rounded-full transition-all" style={{ width: `${storagePercentage}%` }}></div>
         </div>
-        <p className="text-[10px] text-gray-500 dark:text-gray-400">
+        <p className="text-[10px] text-gray-600 dark:text-gray-400">
           {stats ? `${formatSize(stats.usedStorage)} of ${formatSize(stats.maxStorage)} used` : 'Loading...'}
         </p>
-        <button className="w-full mt-3 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-lg transition-colors">
-          Upgrade
-        </button>
       </div>
     </aside>
   );
