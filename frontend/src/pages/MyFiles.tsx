@@ -655,7 +655,7 @@ const MyFiles: React.FC = () => {
                 setNewFolderName('');
                 setErrorMessage('');
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#232f48] rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -670,7 +670,7 @@ const MyFiles: React.FC = () => {
         }
       >
         <div className="flex flex-col gap-4">
-          <label className="text-sm text-gray-400">Enter new name</label>
+          <label className="text-sm text-gray-700 dark:text-gray-400">Enter new name</label>
           <input
             type="text"
             value={newFolderName}
@@ -678,7 +678,7 @@ const MyFiles: React.FC = () => {
               setNewFolderName(e.target.value);
               setErrorMessage('');
             }}
-            className="w-full px-4 py-2 bg-[#0f172a] border border-[#232f48] rounded-lg text-white focus:outline-none focus:border-primary transition-colors"
+            className="w-full px-4 py-2 bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-[#232f48] rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-primary transition-colors"
             placeholder="Folder name"
             autoFocus
             onKeyDown={(e) => e.key === 'Enter' && handleRenameFolderSubmit()}
@@ -698,7 +698,7 @@ const MyFiles: React.FC = () => {
           <>
             <button
               onClick={() => setDeleteFolderModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#232f48] rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -712,10 +712,10 @@ const MyFiles: React.FC = () => {
           </>
         }
       >
-        <p className="text-gray-300">
-          Are you sure you want to delete <span className="font-semibold text-white">"{selectedFolderForAction?.name}"</span>?
+        <p className="text-gray-700 dark:text-gray-300">
+          Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">"{selectedFolderForAction?.name}"</span>?
         </p>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-gray-600 dark:text-gray-500 mt-2">
           All files and subfolders inside will also be deleted. This action cannot be undone.
         </p>
       </Modal>
@@ -735,7 +735,7 @@ const MyFiles: React.FC = () => {
                 setMoveFolderModalOpen(false);
                 setSelectedDestinationFolderId(null);
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-[#232f48] rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#232f48] rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -750,8 +750,8 @@ const MyFiles: React.FC = () => {
         }
       >
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-gray-400">
-            Move <span className="font-semibold text-white">"{selectedFolderForAction?.name}"</span> to:
+          <p className="text-sm text-gray-700 dark:text-gray-400">
+            Move <span className="font-semibold text-gray-900 dark:text-white">"{selectedFolderForAction?.name}"</span> to:
           </p>
           
           {/* Root folder option - only show if not already in root */}
@@ -761,10 +761,10 @@ const MyFiles: React.FC = () => {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${
                 selectedDestinationFolderId === null
                   ? 'bg-primary/20 border-primary text-white'
-                  : 'bg-[#0f172a] border-[#232f48] text-gray-300 hover:border-primary/50'
+                  : 'bg-gray-50 dark:bg-[#0f172a] border-gray-200 dark:border-[#232f48] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#0f172a]/80'
               }`}
             >
-              <span className="material-symbols-outlined text-[24px]">home</span>
+              <span className="material-symbols-outlined text-[24px] text-gray-700 dark:text-primary">home</span>
               <span className="font-medium">Root (My Files)</span>
             </button>
           )}
@@ -780,7 +780,7 @@ const MyFiles: React.FC = () => {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${
                     selectedDestinationFolderId === folder.id
                       ? 'bg-primary/20 border-primary text-white'
-                      : 'bg-[#0f172a] border-[#232f48] text-gray-300 hover:border-primary/50'
+                      : 'bg-gray-50 dark:bg-[#0f172a] border-gray-200 dark:border-[#232f48] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#0f172a]/80'
                   }`}
                 >
                   <span className="material-symbols-outlined text-[24px] text-primary">folder</span>
@@ -791,13 +791,13 @@ const MyFiles: React.FC = () => {
           </div>
 
           {folders.filter(f => f.id !== selectedFolderForAction?.id).length === 0 && !currentFolderId && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-gray-600 dark:text-gray-500 text-center py-4">
               No other folders available. Create a new folder first.
             </p>
           )}
           
           {folders.filter(f => f.id !== selectedFolderForAction?.id).length === 0 && currentFolderId && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-gray-600 dark:text-gray-500 text-center py-4">
               No other folders available in this location.
             </p>
           )}
