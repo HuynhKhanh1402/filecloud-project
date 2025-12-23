@@ -53,6 +53,9 @@ export class FilesService {
     const fileExt = file.originalname.split('.').pop();
     const storagePath = `${userId}/${randomUUID()}.${fileExt}`;
 
+    // Decode filename properly (fix Vietnamese/UTF-8 encoding issues)
+    const decodedFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+
     // Upload to MinIO
     await this.minioService.uploadFile(storagePath, file.buffer, {
       'Content-Type': file.mimetype,
@@ -61,7 +64,7 @@ export class FilesService {
     // Save to database
     const uploadedFile = await this.prisma.file.create({
       data: {
-        name: file.originalname,
+        name: decodedFileName,
         size: file.size,
         mimeType: file.mimetype,
         storagePath,
