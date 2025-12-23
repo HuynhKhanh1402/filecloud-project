@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import FileIcon from '../components/FileIcon';
 import { sharesService, type ShareResponse } from '../services/shares.service';
@@ -18,23 +18,7 @@ const Shared: React.FC = () => {
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadShares();
-  }, [activeTab]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setActiveMenuId(null);
-        setMenuPosition(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const loadShares = async () => {
+  const loadShares = useCallback(async () => {
     try {
       setLoading(true);
       if (activeTab === 'accepted') {
@@ -50,7 +34,27 @@ const Shared: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    loadShares();
+  }, [loadShares]);
+
+  useEffect(() => {
+    loadShares();
+  }, [loadShares]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveMenuId(null);
+        setMenuPosition(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleShareAction = () => {
     setSelectedShare(null);
@@ -150,7 +154,7 @@ const Shared: React.FC = () => {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-[#0f172a] border-b border-gray-200 dark:border-[#232f48]">
+                  <thead className="border-b border-gray-200 dark:border-[#232f48]">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Shared By</th>
@@ -159,9 +163,9 @@ const Shared: React.FC = () => {
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-[#1a2233] divide-y divide-gray-200 dark:divide-[#232f48]">
+                  <tbody className="divide-y divide-gray-200 dark:divide-[#232f48]">
                     {acceptedShares.map((share) => (
-                      <tr key={share.id} className="hover:bg-gray-50 dark:hover:bg-[#0f172a] transition-colors group">
+                      <tr key={share.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <FileIcon mimeType={share.file?.mimeType || ''} />

@@ -71,7 +71,7 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* Storage Widget */}
-      <div className="p-4 m-3 mb-8 bg-gradient-to-br from-blue-50 to-white dark:bg-[#1a2233] rounded-xl border border-blue-100 dark:border-[#232f48] shadow-sm dark:shadow-none transition-colors">
+      <div className="p-4 m-3 mb-8 bg-gradient-to-br from-blue-50 to-white dark:from-[#1a2233] dark:to-[#1a2233] rounded-xl border border-blue-100 dark:border-[#232f48] shadow-sm dark:shadow-none transition-colors">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-semibold text-gray-900 dark:text-white">Storage</span>
           <span className="text-xs font-semibold text-primary">{storagePercentage}%</span>

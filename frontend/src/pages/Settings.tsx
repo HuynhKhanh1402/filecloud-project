@@ -77,14 +77,17 @@ const Settings: React.FC = () => {
             <div className="flex flex-col gap-4">
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Storage Used</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Storage Used</span>
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
                     {loading ? 'Loading...' : `${formatSize(stats?.usedStorage || 0)} / ${formatSize(stats?.maxStorage || 0)}`}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-[#232f48] rounded-full h-2">
-                  <div className="bg-primary h-2 rounded-full" style={{ width: `${storagePercentage}%` }}></div>
+                <div className="w-full bg-gray-200 dark:bg-[#232f48] rounded-full h-2.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-primary to-blue-500 h-2.5 rounded-full transition-all" style={{ width: `${storagePercentage}%` }}></div>
                 </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  {storagePercentage}% used
+                </p>
               </div>
               {/* <button className="w-fit px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors">
                 Upgrade Storage
