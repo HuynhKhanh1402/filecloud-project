@@ -387,12 +387,12 @@ const FileTable: React.FC<FileTableProps> = ({ viewMode, files, onRefresh, isTra
         }
       >
         <div className="flex flex-col gap-4">
-          <label className="text-sm text-gray-400">Enter new name</label>
+          <label className="text-sm text-gray-700 dark:text-gray-400">Enter new name</label>
           <input
             type="text"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            className="w-full px-4 py-2 bg-[#0f172a] border border-[#232f48] rounded-lg text-white focus:outline-none focus:border-primary transition-colors"
+            className="w-full px-4 py-2 bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-[#232f48] rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-primary transition-colors"
             placeholder="File name"
             autoFocus
             onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit()}
