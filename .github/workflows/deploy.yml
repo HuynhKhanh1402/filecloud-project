@@ -25,13 +25,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
-          source: |
-            docker-compose.yml
-            backend
-            frontend
+          source: "."
           target: ${{ secrets.DEPLOY_PATH }}
           rm: false
-          strip_components: 0
 
       - name: Deploy with Docker Compose
         uses: appleboy/ssh-action@v1.0.3
