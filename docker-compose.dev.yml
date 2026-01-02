@@ -60,7 +60,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3000
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-filecloud}:${POSTGRES_PASSWORD:-filecloud123}@postgres:5432/${POSTGRES_DB:-filecloud}?schema=public
+      - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - MINIO_ENDPOINT=minio
@@ -69,6 +69,8 @@ services:
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
       - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-filecloud}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173}
+      - CORS_CREDENTIALS=${CORS_CREDENTIALS:-true}
     networks:
       - filecloud-dev-network
     depends_on:

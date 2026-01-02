@@ -39,6 +39,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const initializeSocket = async () => {
       try {
+        // Check if user is logged in first
+        const isAuthenticated = await authService.verifyToken();
+        if (!isAuthenticated) {
+          console.log("User not authenticated, skipping WebSocket initialization");
+          return;
+        }
+
         const user = await authService.getCurrentUser();
         if (!user || !user.id) return;
 
