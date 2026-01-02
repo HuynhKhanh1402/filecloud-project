@@ -1,0 +1,100 @@
+# Docker Compose for Production
+# Usage: docker-compose up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: filecloud-postgres-prod
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-filecloud}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-filecloud123}
+      - POSTGRES_DB=${POSTGRES_DB:-filecloud}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - filecloud-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-filecloud}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: filecloud-minio-prod
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - filecloud-network
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: filecloud-backend-prod
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-filecloud}:${POSTGRES_PASSWORD:-filecloud123}@postgres:5432/${POSTGRES_DB:-filecloud}?schema=public
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_USE_SSL=false
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-filecloud}
+    networks:
+      - filecloud-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_WS_URL: ${VITE_WS_URL:-http://localhost:3000}
+        VITE_PORT: ${VITE_PORT:-5173}
+    container_name: filecloud-frontend-prod
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    networks:
+      - filecloud-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  filecloud-network:
+    driver: bridge
+    name: filecloud-network
+
+volumes:
+  postgres-data:
+    name: filecloud-postgres-data
+  minio-data:
+    name: filecloud-minio-data

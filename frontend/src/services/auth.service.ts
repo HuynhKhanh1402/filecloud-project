@@ -1,10 +1,9 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
-
-const API_URL = 'http://localhost:3000'; // Adjust if your backend runs on a different port
+import { API_CONFIG } from '../config/api.config';
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_CONFIG.API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

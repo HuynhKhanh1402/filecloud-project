@@ -1,0 +1,32 @@
+# Dockerfile for Backend Development
+FROM node:20-alpine
+
+# Install development tools
+RUN apk add --no-cache bash curl
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including devDependencies)
+RUN npm install --legacy-peer-deps
+
+# Copy Prisma schema
+COPY prisma ./prisma
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Copy configuration files
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+
+# Copy source code (will be overridden by volume mount in dev)
+COPY . .
+
+# Expose backend port
+EXPOSE 3000
+
+# Run Prisma migrations and start dev server
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:dev"]

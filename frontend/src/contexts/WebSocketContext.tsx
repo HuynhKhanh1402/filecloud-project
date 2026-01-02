@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { authService } from "../services/auth.service";
+import { API_CONFIG } from "../config/api.config";
 
 interface ShareNotification {
   shareId: string;
@@ -42,7 +43,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         if (!user || !user.id) return;
 
         // Connect to WebSocket server
-        newSocket = io("http://localhost:3000", {
+        newSocket = io(API_CONFIG.WS_URL, {
           transports: ["websocket"],
           reconnection: true,
           reconnectionDelay: 1000,
