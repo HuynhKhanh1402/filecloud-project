@@ -1,133 +1,102 @@
-deploy:
-  name: Deploy to Production Server
-  runs-on: ubuntu-latest
-  needs: build
-  if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+name: Deploy to Production
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
-    - name: Copy only necessary files to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SERVER_PORT || 22 }}
-        source: |
-          docker-compose.yml
-          .env.example
-          backend
-          frontend
-        target: ${{ secrets.DEPLOY_PATH }}
-        rm: false
-        strip_components: 0
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
 
-    - name: Create .env on server if missing + deploy with docker-compose
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SERVER_PORT || 22 }}
-        script: |
-          set -euo pipefail
-          cd "${{ secrets.DEPLOY_PATH }}"
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
-          # Ensure docker-compose exists
-          if ! command -v docker-compose >/dev/null 2>&1; then
-            echo "docker-compose not found on server. Aborting."
-            exit 1
-          fi
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-          # Create .env only if it does not exist (safe)
-          if [ ! -f .env ]; then
-            cat > .env <<'EOF'
-          NODE_ENV=production
-          BACKEND_PORT=3000
-          FRONTEND_PORT=5173
-          POSTGRES_HOST_PORT=5432
-          POSTGRES_USER=${POSTGRES_USER}
-          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-          POSTGRES_DB=${POSTGRES_DB}
-          DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
-          JWT_SECRET=${JWT_SECRET}
-          JWT_EXPIRES_IN=7d
-          MINIO_ROOT_USER=${MINIO_ROOT_USER}
-          MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-          MINIO_ENDPOINT=minio
-          MINIO_PORT=9000
-          MINIO_USE_SSL=false
-          MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
-          MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
-          MINIO_BUCKET_NAME=filecloud
-          CORS_ORIGIN=${CORS_ORIGIN}
-          CORS_CREDENTIALS=true
-          VITE_API_URL=${VITE_API_URL}
-          VITE_WS_URL=${VITE_WS_URL}
-          VITE_PORT=5173
-          EOF
-            # secure the file
-            chmod 600 .env
-            echo ".env created"
-          else
-            echo ".env already exists on server — skipping creation (safe mode)."
-          fi
+      - name: Copy project files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          source: |
+            docker-compose.yml
+            backend
+            frontend
+          target: ${{ secrets.DEPLOY_PATH }}
+          rm: false
+          strip_components: 0
 
-          # Optionally pull images if you push to registry in build step
-          # docker-compose --env-file .env pull || true
+      - name: Deploy with Docker Compose
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            set -e
 
-          # Deploy (build only if needed)
-          docker-compose --env-file .env down --remove-orphans || true
-          docker-compose --env-file .env up -d --build --remove-orphans
+            cd ${{ secrets.DEPLOY_PATH }}
 
-          # Show quick status and logs
-          docker-compose --env-file .env ps
-          docker-compose --env-file .env logs --tail=50
+            echo "Current directory:"
+            pwd
 
-    - name: Health Check (with retries)
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SERVER_PORT || 22 }}
-        script: |
-          set -euo pipefail
-          MAX_TRIES=12
-          SLEEP=5
-          i=0
-          until curl -fsS http://localhost:3000/api/health || [ $i -ge $MAX_TRIES ]; do
-            i=$((i+1))
-            echo "Backend not up yet, try $i/$MAX_TRIES. Sleeping ${SLEEP}s..."
-            sleep $SLEEP
-          done
-          if [ $i -ge $MAX_TRIES ]; then
-            echo "Backend health check failed after ${MAX_TRIES} tries."
-            exit 1
-          fi
+            echo "Checking docker-compose..."
+            if ! command -v docker-compose >/dev/null 2>&1; then
+              echo "docker-compose not found"
+              exit 1
+            fi
 
-          # Frontend check
-          i=0
-          until curl -fsS http://localhost:5173 || [ $i -ge $MAX_TRIES ]; do
-            i=$((i+1))
-            echo "Frontend not up yet, try $i/$MAX_TRIES. Sleeping ${SLEEP}s..."
-            sleep $SLEEP
-          done
-          if [ $i -ge $MAX_TRIES ]; then
-            echo "Frontend health check failed after ${MAX_TRIES} tries."
-            exit 1
-          fi
+            echo "Checking .env file..."
+            if [ ! -f .env ]; then
+              echo ".env NOT FOUND - aborting to avoid breaking production"
+              exit 1
+            fi
 
-          echo "Deployment successful!"
+            echo "Stopping old containers..."
+            docker-compose down --remove-orphans || true
 
-    - name: Notify Deployment Status
-      if: always()
-      run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "Deployment completed successfully!"
-        else
-          echo "Deployment failed!"
-          exit 1
-        fi
+            echo "Starting containers..."
+            docker-compose up -d --build --remove-orphans
+
+            echo "Containers status:"
+            docker-compose ps
+
+      - name: Health Check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            set -e
+
+            echo "Checking backend..."
+            for i in {1..12}; do
+              if curl -fsS http://localhost:3000/api; then
+                echo "Backend OK"
+                break
+              fi
+              echo "Waiting backend... ($i/12)"
+              sleep 5
+            done
+
+            echo "Checking frontend..."
+            for i in {1..12}; do
+              if curl -fsS http://localhost:5173; then
+                echo "Frontend OK"
+                break
+              fi
+              echo "Waiting frontend... ($i/12)"
+              sleep 5
+            done
+
+            echo "Deployment successful"
