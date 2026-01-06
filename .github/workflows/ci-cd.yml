@@ -20,8 +20,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            backend/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-backend-npm-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-npm-
+            ${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: backend
@@ -39,10 +48,6 @@ jobs:
         working-directory: backend
         run: npm run test
 
-      - name: Run test coverage
-        working-directory: backend
-        run: npm run test:cov
-
   test-frontend:
     name: Test Frontend
     runs-on: ubuntu-latest
@@ -55,8 +60,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-frontend-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-npm-
+            ${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: frontend
@@ -84,6 +98,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Copy project files to server
         uses: appleboy/scp-action@v0.1.7
@@ -128,6 +145,9 @@ jobs:
 
             echo "Starting containers..."
             docker compose up -d --build --remove-orphans
+
+            echo "Pruning old Docker images..."
+            docker image prune -f
 
             echo "Containers status:"
             docker compose ps

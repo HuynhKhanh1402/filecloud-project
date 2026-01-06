@@ -10,6 +10,9 @@ export class UserStatsDto {
   @ApiProperty({ example: 16842752000, description: 'Storage used in bytes' })
   usedStorage: number;
 
-  @ApiProperty({ example: 53687091200, description: 'Maximum storage in bytes (50GB)' })
+  @ApiProperty({
+    example: 53687091200,
+    description: 'Maximum storage in bytes (50GB)',
+  })
   maxStorage: number;
 }
