@@ -48,10 +48,6 @@ jobs:
         working-directory: backend
         run: npm run test
 
-      - name: Run test coverage
-        working-directory: backend
-        run: npm run test:cov
-
   test-frontend:
     name: Test Frontend
     runs-on: ubuntu-latest
