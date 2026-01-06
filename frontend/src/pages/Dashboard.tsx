@@ -100,7 +100,7 @@ const Dashboard: React.FC = () => {
         {/* Overview Section */}
         <div>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Overview</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Overview 1</h2>
             <div className="flex gap-3">
               <button
                 onClick={() => setCreateFolderModalOpen(true)}
