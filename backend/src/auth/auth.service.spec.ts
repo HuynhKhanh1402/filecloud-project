@@ -15,7 +15,7 @@ describe('AuthService', () => {
   const mockPrismaService = {
     user: {
       findUnique: jest.fn(), // Fake function we control
-      create: jest.fn(),     // Fake function we control
+      create: jest.fn(), // Fake function we control
     },
   };
 
