@@ -9,8 +9,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies for build
-RUN npm ci --legacy-peer-deps
+# Install all dependencies for build with cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps
 
 # Copy source files
 COPY . .
@@ -25,8 +26,9 @@ ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_WS_URL=$VITE_WS_URL
 ENV VITE_PORT=$VITE_PORT
 
-# Build the application
-RUN npm run build
+# Build the application with cache
+RUN --mount=type=cache,target=/app/node_modules/.cache \
+    npm run build
 
 # Production stage
 FROM node:20-alpine
